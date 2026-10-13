@@ -27,6 +27,17 @@ only cost tracking. Idea from Moritz (2026-10-13).
 - "Meeting score" per person: who spends the most time in meetings, how many
   meetings, total hours, total cost caused. Ranking, simple bars.
 
+## Gehaltsrechner im Personenformular (Wunsch von Moritz, 2026-10-13)
+Optional neben dem Stundensatz: "Aus Jahresgehalt berechnen". Jahresbrutto eingeben,
+der Stundensatz wird vorgeschlagen und bleibt von Hand änderbar. Gespeichert wird
+immer nur der Stundensatz (Cent), das Gehalt wird nicht gespeichert.
+- Arbeitgeberkosten ca. 61.000 / 91.000 / 119.000 € bei 50.000 / 75.000 / 100.000 € brutto,
+  dazwischen linear, darunter 22 %, darüber 19 % Aufschlag (Näherung, Konstanten in `src/lib/salary.ts`).
+- Stunden pro Jahr: 1.700 (produktiv, ohne Urlaub, Feiertage, Krankheit), 2.080 (40 Std x 52) oder eigene Zahl.
+- Satz = Arbeitgeberkosten / Stunden, auf ganze Cent gerundet. Schalter "nur Brutto" rechnet Brutto / Stunden.
+- Hinweis im Formular: "Näherungswert, inkl. ca. 20 % Arbeitgeberkosten".
+- Beispiele (Tests): 1.700 Std: 35,88 / 53,53 / 70,00 €; 2.080 Std: 29,33 / 43,75 / 57,21 €.
+
 ## Look and feel
 Very simple, very light, modern, banking style (Revolut, Finanzguru): big
 numbers, soft cards, clear hierarchy, lots of whitespace, smooth small

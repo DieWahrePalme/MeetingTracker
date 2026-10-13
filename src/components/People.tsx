@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { actions, useData } from '../data/store'
 import type { Person } from '../data/types'
-import { formatEuro, formatHours, parseEuroToCents } from '../lib/money'
+import { centsToInput, formatEuro, formatHours, parseEuroToCents } from '../lib/money'
+import { NOMINAL_HOURS, PRODUCTIVE_HOURS, suggestedRateCents } from '../lib/salary'
 import { personScores } from '../lib/stats'
 import { t } from '../texts'
 import { Sheet } from './Sheet'
@@ -10,6 +11,24 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
   const [name, setName] = useState(person?.name ?? '')
   const [rate, setRate] = useState(person ? String(person.rateCents / 100).replace('.', ',') : '')
   const [tried, setTried] = useState(false)
+  const [calcOpen, setCalcOpen] = useState(false)
+  const [salary, setSalary] = useState('')
+  const [hoursMode, setHoursMode] = useState<'1700' | '2080' | 'custom'>('1700')
+  const [customHours, setCustomHours] = useState('1700')
+  const [grossOnly, setGrossOnly] = useState(false)
+
+  const hours = hoursMode === 'custom' ? Math.floor(Number(customHours) || 0) : hoursMode === '2080' ? NOMINAL_HOURS : PRODUCTIVE_HOURS
+  const grossCents = parseEuroToCents(salary)
+  const suggestion = grossCents !== null && hours > 0 ? suggestedRateCents(grossCents, hours, grossOnly) : null
+
+  /** Trägt den Vorschlag ins Satzfeld ein; danach bleibt es von Hand änderbar. */
+  function recalc(next: { salary?: string; hoursMode?: typeof hoursMode; customHours?: string; grossOnly?: boolean }) {
+    const sal = parseEuroToCents(next.salary ?? salary)
+    const mode = next.hoursMode ?? hoursMode
+    const custom = Math.floor(Number(next.customHours ?? customHours) || 0)
+    const h = mode === 'custom' ? custom : mode === '2080' ? NOMINAL_HOURS : PRODUCTIVE_HOURS
+    if (sal !== null && h > 0) setRate(centsToInput(suggestedRateCents(sal, h, next.grossOnly ?? grossOnly)))
+  }
   const cents = parseEuroToCents(rate)
   const nameErr = !name.trim() ? t.people.errName : ''
   const rateErr = cents === null ? t.people.errRate : ''
@@ -25,6 +44,71 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
         <input value={rate} inputMode="decimal" placeholder={t.people.rateHint} onChange={(e) => setRate(e.target.value)} />
         {tried && rateErr && <small className="error" role="alert">{rateErr}</small>}
       </label>
+      <button type="button" className="link calc-toggle" aria-expanded={calcOpen} onClick={() => setCalcOpen(!calcOpen)}>
+        {calcOpen ? '− ' : '+ '}{t.people.calc.toggle}
+      </button>
+      {calcOpen && (
+        <div className="calc">
+          <label className="field">
+            <span>{t.people.calc.salary}</span>
+            <input
+              value={salary}
+              inputMode="decimal"
+              placeholder={t.people.calc.salaryHint}
+              onChange={(e) => {
+                setSalary(e.target.value)
+                recalc({ salary: e.target.value })
+              }}
+            />
+          </label>
+          <label className="field">
+            <span>{t.people.calc.hours}</span>
+            <select
+              value={hoursMode}
+              onChange={(e) => {
+                const m = e.target.value as typeof hoursMode
+                setHoursMode(m)
+                recalc({ hoursMode: m })
+              }}
+            >
+              <option value="1700">{t.people.calc.hours1700}</option>
+              <option value="2080">{t.people.calc.hours2080}</option>
+              <option value="custom">{t.people.calc.hoursCustom}</option>
+            </select>
+          </label>
+          {hoursMode === 'custom' && (
+            <input
+              aria-label={t.people.calc.hours}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={customHours}
+              onChange={(e) => {
+                setCustomHours(e.target.value)
+                recalc({ customHours: e.target.value })
+              }}
+            />
+          )}
+          <p className="muted">{t.people.calc.hoursNote}</p>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={grossOnly}
+              onChange={(e) => {
+                setGrossOnly(e.target.checked)
+                recalc({ grossOnly: e.target.checked })
+              }}
+            />
+            <span>{t.people.calc.grossOnly}</span>
+          </label>
+          {suggestion !== null && (
+            <p>
+              {t.people.calc.result}: <strong>{formatEuro(suggestion)}/h</strong> <span className="muted">({t.people.calc.apply})</span>
+            </p>
+          )}
+          <p className="muted">{grossOnly ? t.people.calc.hintGross : t.people.calc.hint}</p>
+        </div>
+      )}
       {person && <p className="muted">{t.people.rateNote}</p>}
       <div className="row">
         {person && (

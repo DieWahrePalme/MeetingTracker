@@ -38,3 +38,8 @@ export function formatDuration(totalSeconds: number): string {
 export function formatHours(totalSeconds: number): string {
   return `${(Math.round(totalSeconds / 360) / 10).toLocaleString('de-DE', { minimumFractionDigits: 1 })} h`
 }
+
+/** 3588 -> "35,88" (für Eingabefelder, ohne Eurozeichen) */
+export function centsToInput(cents: number): string {
+  return `${Math.trunc(cents / 100)},${String(cents % 100).padStart(2, '0')}`
+}

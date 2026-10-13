@@ -72,6 +72,11 @@ button { cursor: pointer; }
 .filters small, .field > span { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
 select, input:not([type='checkbox']), .input { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); padding: 0 12px; }
 select:disabled { opacity: 0.5; }
+.calc-toggle { align-self: flex-start; padding: 0; }
+.calc { display: flex; flex-direction: column; gap: 12px; background: var(--bg); border-radius: 16px; padding: 14px; }
+.calc input:not([type='checkbox']), .calc select { background: var(--card); }
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
 .line { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .line > div { display: flex; flex-direction: column; }
 .result { border-top: 1px solid var(--line); padding-top: 12px; }
