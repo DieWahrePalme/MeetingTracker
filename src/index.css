@@ -6,6 +6,7 @@
   --line: #e8eaee;
   --accent: #3b5bfd;
   --accent-soft: #e9edff;
+  --on-accent: #ffffff;
   --danger: #d1344b;
   --radius: 20px;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -20,6 +21,7 @@
     --line: #262a33;
     --accent: #7b92ff;
     --accent-soft: #232a4a;
+    --on-accent: #0f1115;
     --danger: #ff6b81;
   }
 }
@@ -51,7 +53,7 @@ button { cursor: pointer; }
 .btn { min-height: 52px; padding: 0 20px; border-radius: 16px; border: 0; font-weight: 600; transition: transform 0.12s, opacity 0.12s; }
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
 .btn.ghost { background: var(--card); border: 1px solid var(--line); }
 .btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--line); }
 .btn.wide { width: 100%; }
@@ -92,7 +94,7 @@ small { font-size: 0.82rem; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); font-weight: 500; }
-.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .dur { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .dur label { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .dur small { color: var(--muted); }
