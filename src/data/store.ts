@@ -1,0 +1,168 @@
+// Die einzige Stelle, die Daten speichert. Später kann hier ein Backend angeschlossen werden.
+import { useSyncExternalStore } from 'react'
+import type { AppData, Meeting, Participant, Person } from './types'
+
+const KEY = 'meetingtracker.v1'
+
+const emptyData = (): AppData => ({
+  version: 1,
+  companyName: 'Unternehmen A',
+  people: [],
+  meetings: [],
+  live: null,
+})
+
+const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null
+const isInt = (x: unknown): x is number => Number.isInteger(x) && (x as number) >= 0
+const isStr = (x: unknown): x is string => typeof x === 'string'
+
+/** Prüft importierte Daten streng, wirft bei Fehlern. */
+export function parseData(raw: unknown): AppData {
+  if (!isObj(raw) || raw.version !== 1) throw new Error('Unbekanntes Format')
+  if (!isStr(raw.companyName) || !Array.isArray(raw.people) || !Array.isArray(raw.meetings)) {
+    throw new Error('Unvollständige Daten')
+  }
+  const people = raw.people.map((p): Person => {
+    if (!isObj(p) || !isStr(p.id) || !isStr(p.name) || !isInt(p.rateCents)) throw new Error('Ungültige Person')
+    return { id: p.id, name: p.name, rateCents: p.rateCents }
+  })
+  const meetings = raw.meetings.map((m): Meeting => {
+    if (!isObj(m) || !isStr(m.id) || !isStr(m.title) || !isInt(m.startedAt) || !isInt(m.durationSec) || !Array.isArray(m.participants)) {
+      throw new Error('Ungültiges Meeting')
+    }
+    const participants = m.participants.map((p): Participant => {
+      if (!isObj(p) || !isStr(p.personId) || !isStr(p.name) || !isInt(p.rateCents)) throw new Error('Ungültige Teilnehmer')
+      return { personId: p.personId, name: p.name, rateCents: p.rateCents }
+    })
+    return { id: m.id, title: m.title, startedAt: m.startedAt, durationSec: m.durationSec, participants }
+  })
+  let live: AppData['live'] = null
+  if (isObj(raw.live) && isStr(raw.live.title) && isInt(raw.live.startedAt) && Array.isArray(raw.live.personIds)) {
+    live = { title: raw.live.title, startedAt: raw.live.startedAt, personIds: raw.live.personIds.filter(isStr) }
+  }
+  return { version: 1, companyName: raw.companyName, people, meetings, live }
+}
+
+function load(): AppData {
+  try {
+    const text = localStorage.getItem(KEY)
+    if (text) return parseData(JSON.parse(text))
+  } catch {
+    /* kaputt oder blockiert: leer starten */
+  }
+  return emptyData()
+}
+
+let state: AppData = load()
+const listeners = new Set<() => void>()
+
+function set(next: AppData) {
+  state = next
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next))
+  } catch {
+    /* Speicher voll oder blockiert */
+  }
+  listeners.forEach((l) => l())
+}
+
+export function useData(): AppData {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb)
+      return () => listeners.delete(cb)
+    },
+    () => state,
+  )
+}
+
+// crypto.randomUUID gibt es nur über HTTPS oder localhost, daher ein Ersatz (z. B. für http über Tailscale).
+const uid = () =>
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10)
+
+// ---- Aktionen ----
+export const actions = {
+  setCompanyName(name: string) {
+    set({ ...state, companyName: name })
+  },
+  savePerson(p: { id?: string; name: string; rateCents: number }) {
+    if (p.id) {
+      set({ ...state, people: state.people.map((x) => (x.id === p.id ? { ...x, name: p.name, rateCents: p.rateCents } : x)) })
+    } else {
+      set({ ...state, people: [...state.people, { id: uid(), name: p.name, rateCents: p.rateCents }] })
+    }
+  },
+  deletePerson(id: string) {
+    set({ ...state, people: state.people.filter((x) => x.id !== id) })
+  },
+  /** Neue Teilnehmer bekommen den aktuellen Satz, schon vorhandene behalten ihren gespeicherten Satz. */
+  saveMeeting(m: { id?: string; title: string; startedAt: number; durationSec: number; personIds: string[] }) {
+    const old = m.id ? state.meetings.find((x) => x.id === m.id) : undefined
+    const participants: Participant[] = m.personIds.flatMap((pid) => {
+      const kept = old?.participants.find((p) => p.personId === pid)
+      if (kept) return [kept]
+      const person = state.people.find((p) => p.id === pid)
+      return person ? [{ personId: pid, name: person.name, rateCents: person.rateCents }] : []
+    })
+    const meeting: Meeting = { id: m.id ?? uid(), title: m.title, startedAt: m.startedAt, durationSec: m.durationSec, participants }
+    set({ ...state, meetings: old ? state.meetings.map((x) => (x.id === old.id ? meeting : x)) : [...state.meetings, meeting] })
+  },
+  deleteMeeting(id: string) {
+    set({ ...state, meetings: state.meetings.filter((x) => x.id !== id) })
+  },
+  startLive() {
+    set({ ...state, live: { title: '', startedAt: Date.now(), personIds: [] } })
+  },
+  updateLive(patch: { title?: string; personIds?: string[] }) {
+    if (state.live) set({ ...state, live: { ...state.live, ...patch } })
+  },
+  stopLive() {
+    const l = state.live
+    if (!l) return
+    const durationSec = Math.max(1, Math.round((Date.now() - l.startedAt) / 1000))
+    actions.saveMeeting({ title: l.title.trim() || 'Meeting', startedAt: l.startedAt, durationSec, personIds: l.personIds })
+    set({ ...state, live: null })
+  },
+  cancelLive() {
+    set({ ...state, live: null })
+  },
+  loadDemo() {
+    const people: Person[] = [
+      { id: uid(), name: 'Person A', rateCents: 3000 },
+      { id: uid(), name: 'Person B', rateCents: 4500 },
+      { id: uid(), name: 'Person C', rateCents: 6000 },
+      { id: uid(), name: 'Besucher', rateCents: 2500 },
+    ]
+    const day = 86_400_000
+    const now = Date.now()
+    const mk = (title: string, daysAgo: number, min: number, idx: number[]): Meeting => ({
+      id: uid(),
+      title,
+      startedAt: now - daysAgo * day,
+      durationSec: min * 60,
+      participants: idx.map((i) => ({ personId: people[i].id, name: people[i].name, rateCents: people[i].rateCents })),
+    })
+    set({
+      ...state,
+      people,
+      meetings: [
+        mk('Wochenplanung', 1, 30, [0, 1]),
+        mk('Abstimmung Projekt', 3, 90, [0, 1, 2]),
+        mk('Kurzes Update', 8, 15, [0, 2]),
+        mk('Workshop mit Besuch', 40, 150, [0, 1, 2, 3]),
+        mk('Jahresrückblick', 400, 120, [0, 1, 2]),
+      ],
+    })
+  },
+  exportJson(): string {
+    return JSON.stringify({ ...state, live: null }, null, 2)
+  },
+  importJson(text: string) {
+    set(parseData(JSON.parse(text)))
+  },
+  clearAll() {
+    set(emptyData())
+  },
+}
