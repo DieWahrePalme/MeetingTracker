@@ -13,11 +13,14 @@ export function PersonPicker({
   selected,
   onChange,
   teams = [],
+  autoFocusSearch = false,
 }: {
   options: PickOption[]
   selected: string[]
   onChange: (ids: string[]) => void
   teams?: Team[]
+  /** Cursor startet in der Suche (nur sichtbar bei mehr als 8 Personen). */
+  autoFocusSearch?: boolean
 }) {
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
@@ -87,6 +90,7 @@ export function PersonPicker({
       <input
         ref={searchRef}
         data-scroll="start"
+        autoFocus={autoFocusSearch}
         type="search"
         className="input"
         value={query}

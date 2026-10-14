@@ -199,12 +199,12 @@ function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
     >
       <label className="field">
         <span>{t.people.team.name}</span>
-        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus={!team} />
         {tried && nameErr && <small className="error" role="alert">{nameErr}</small>}
       </label>
       <div className="field">
         <span>{t.people.team.members}</span>
-        <PersonPicker options={options} selected={ids} onChange={setIds} />
+        <PersonPicker options={options} selected={ids} onChange={setIds} autoFocusSearch={!!team} />
         {tried && membersErr && <small className="error" role="alert">{membersErr}</small>}
       </div>
     </Sheet>
