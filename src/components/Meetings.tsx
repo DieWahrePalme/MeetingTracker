@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useData } from '../data/store'
 import { suggestRecurring } from '../lib/recurring'
 import type { Suggestion } from '../lib/recurring'
@@ -7,6 +7,7 @@ import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, personSeconds, valueByRating } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
+import { applyMetric } from '../theme'
 import { LiveCard } from './LiveCard'
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingForm } from './MeetingForm'
@@ -27,6 +28,7 @@ function useMetric(): [Metric, (m: Metric) => void] {
       return 'cost'
     }
   })
+  useEffect(() => applyMetric(metric), [metric])
   return [
     metric,
     (m) => {

@@ -304,3 +304,101 @@ select:disabled { opacity: 0.5; }
 .more { display: flex; flex-direction: column; gap: 16px; }
 .more .disclosure { min-height: 48px; }
 .link.done { font-size: 0.85rem; }
+
+/* ===== Design-Vorschau: Looks umschaltbar im Reiter "Daten" ===== */
+:root { --font-num: system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; --ink: #14171c; }
+.total, .big, .mid, .timer { font-family: var(--font-num); }
+
+.theme-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.theme-opt { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 6px 12px; border-radius: 16px; border: 2px solid transparent; background: var(--fill); font-weight: 600; font-size: 0.85rem; }
+.theme-opt.on { border-color: var(--accent); background: var(--card); }
+.theme-opt:active { opacity: 0.7; }
+.swatch { display: flex; width: 100%; height: 38px; border-radius: 10px; overflow: hidden; }
+.swatch i { flex: 1; }
+.swatch-standard i:nth-child(1) { background: #f2f3f7; } .swatch-standard i:nth-child(2) { background: #3b5bfd; } .swatch-standard i:nth-child(3) { background: #14171c; }
+.swatch-bon i:nth-child(1) { background: #f4f1ea; } .swatch-bon i:nth-child(2) { background: #ff5b14; } .swatch-bon i:nth-child(3) { background: #14110f; }
+.swatch-klipy i:nth-child(1) { background: #141418; } .swatch-klipy i:nth-child(2) { background: #8800ff; } .swatch-klipy i:nth-child(3) { background: #ffd60a; }
+
+/* --- Kassenbon: Papier und Tinte, Orange = Geld, Blau = Zeit, gepunktete Bon-Linien --- */
+html[data-theme='bon'] {
+  --bg: #f4f1ea; --card: #fffdf8; --text: #14110f; --muted: #665f55;
+  --line: rgba(20, 17, 15, 0.18); --fill: rgba(20, 17, 15, 0.07);
+  --accent: #ff5b14; --on-accent: #14110f; --accent-ink: #b93a05; --accent-soft: #ffe2d2;
+  --danger: #d1344b; --danger-ink: #b3263c; --danger-soft: rgba(209, 52, 75, 0.1); --good: #1e9e6a;
+  --ink: #14110f; --radius: 18px; --shadow: none;
+  --font-num: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+html[data-theme='bon'][data-metric='time'] { --accent: #2b4bff; --on-accent: #ffffff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; }
+@media (prefers-color-scheme: dark) {
+  html[data-theme='bon'] {
+    --bg: #0e0d0c; --card: #1b1917; --text: #f4f1ea; --muted: #a39b90;
+    --line: rgba(244, 241, 234, 0.2); --fill: rgba(244, 241, 234, 0.1);
+    --accent: #ff7a3d; --on-accent: #14110f; --accent-ink: #ff9a66; --accent-soft: rgba(255, 122, 61, 0.2);
+    --danger: #ff6b81; --danger-ink: #ff8294; --danger-soft: rgba(255, 107, 129, 0.16); --good: #4cd6a0;
+    --ink: #000000;
+  }
+  html[data-theme='bon'][data-metric='time'] { --accent: #7088ff; --on-accent: #0e0d0c; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); }
+}
+html[data-theme='bon'] .total { letter-spacing: -0.04em; }
+html[data-theme='bon'] .btn { border: 2px solid var(--ink); border-radius: 14px; box-shadow: 0 3px 0 var(--ink); }
+html[data-theme='bon'] .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); opacity: 1; }
+html[data-theme='bon'] .btn.ghost { background: var(--card); color: var(--text); }
+html[data-theme='bon'] .btn.danger { background: var(--card); }
+html[data-theme='bon'] .btn:disabled { box-shadow: none; }
+html[data-theme='bon'] .card, html[data-theme='bon'] .list { border: 1.5px solid var(--line); }
+html[data-theme='bon'] .list > li + li { border-top: 1.5px dashed var(--line); }
+html[data-theme='bon'] .detail-list { border: 0; background: transparent; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); border-radius: 0; }
+html[data-theme='bon'] .detail-list > li + li { border-top: 1.5px dashed var(--line); }
+html[data-theme='bon'] .cost, html[data-theme='bon'] .detail-list strong, html[data-theme='bon'] .legend strong { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-weight: 700; }
+html[data-theme='bon'] .segment { background: transparent; border: 2px solid var(--ink); border-radius: 14px; }
+html[data-theme='bon'] .segment button { border-radius: 10px; }
+html[data-theme='bon'] .segment button.on { background: var(--ink); color: var(--card); box-shadow: none; }
+html[data-theme='bon'] .chip { border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
+html[data-theme='bon'] .chip.on { box-shadow: inset 0 0 0 2px var(--ink); background: var(--accent); color: var(--on-accent); }
+html[data-theme='bon'] .metric-switch { background: transparent; border: 2px solid var(--ink); }
+html[data-theme='bon'] .metric-switch .thumb { background: var(--accent); box-shadow: none; }
+html[data-theme='bon'] .metric-switch .ico, html[data-theme='bon'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='bon'] .metric-switch.time .ico:last-of-type { color: var(--muted); }
+html[data-theme='bon'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='bon'] .metric-switch.time .ico:last-of-type { color: var(--on-accent); }
+html[data-theme='bon'] .topnav { border-bottom: 2px solid var(--ink); }
+html[data-theme='bon'] .topnav button.on { border-bottom-color: var(--accent); color: var(--text); }
+html[data-theme='bon'] .rate-btn { border-radius: 14px; border: 2px solid var(--line); background: transparent; }
+html[data-theme='bon'] .rate-btn.on { background: var(--card); box-shadow: 0 3px 0 var(--ink); }
+html[data-theme='bon'] .sheet { border-radius: 26px 26px 0 0; border-top: 2px solid var(--ink); }
+html[data-theme='bon'] .bar i { background: var(--accent); }
+html[data-theme='bon'] .stack-bar { border: 1.5px solid var(--ink); background: var(--card); }
+html[data-theme='bon'] .theme-opt.on { border-color: var(--ink); }
+
+/* --- Klipy-Stil: dunkel, knallig, dicke Schrift, 3D-Buttons --- */
+html[data-theme='klipy'] {
+  color-scheme: dark;
+  --bg: #141418; --card: #212127; --text: #ffffff; --muted: #b9b9c6;
+  --line: rgba(255, 255, 255, 0.16); --fill: rgba(255, 255, 255, 0.1);
+  --accent: #8800ff; --on-accent: #ffffff; --accent-ink: #c4a0ff; --accent-soft: rgba(136, 0, 255, 0.3);
+  --hot: #ffd60a;
+  --danger: #ff5252; --danger-ink: #ff8a8a; --danger-soft: rgba(255, 82, 82, 0.18);
+  --good: #3ddc84; --neutral: #b9b9c6; --ink: #000000; --radius: 22px; --shadow: none;
+  --font-num: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+}
+html[data-theme='klipy'] body, html[data-theme='klipy'] button, html[data-theme='klipy'] input, html[data-theme='klipy'] select { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }
+html[data-theme='klipy'] .total, html[data-theme='klipy'] .big, html[data-theme='klipy'] .timer, html[data-theme='klipy'] .mid:not(.bad) { color: var(--hot); font-weight: 700; }
+html[data-theme='klipy'] .btn { border-radius: 16px; font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.6); }
+html[data-theme='klipy'] .btn.primary { box-shadow: 0 4px 0 #4b0099; }
+html[data-theme='klipy'] .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); opacity: 1; }
+html[data-theme='klipy'] .btn.primary:active { box-shadow: 0 1px 0 #4b0099; }
+html[data-theme='klipy'] .card, html[data-theme='klipy'] .list { border: 2px solid rgba(255, 255, 255, 0.08); }
+html[data-theme='klipy'] .segment { border-radius: 16px; }
+html[data-theme='klipy'] .segment button { border-radius: 12px; font-weight: 700; }
+html[data-theme='klipy'] .segment button.on { background: var(--accent); color: #ffffff; box-shadow: 0 2px 0 #4b0099; }
+html[data-theme='klipy'] .chip { font-weight: 600; }
+html[data-theme='klipy'] .chip.on { background: var(--accent); color: #ffffff; }
+html[data-theme='klipy'] .topnav button { font-weight: 700; }
+html[data-theme='klipy'] .topnav button.on { color: var(--hot); border-bottom-color: var(--hot); }
+html[data-theme='klipy'] .metric-switch .thumb { background: var(--hot); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+html[data-theme='klipy'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='klipy'] .metric-switch.time .ico:last-of-type { color: #141418; }
+html[data-theme='klipy'] .bar i { background: var(--hot); }
+html[data-theme='klipy'] .rank { background: var(--hot); color: #141418; }
+html[data-theme='klipy'] .pill, html[data-theme='klipy'] .badge { font-weight: 700; }
+html[data-theme='klipy'] .rate-btn { border-radius: 18px; font-weight: 700; }
+html[data-theme='klipy'] .sheet { border-radius: 30px 30px 0 0; border-top: 2px solid rgba(255, 255, 255, 0.12); }
+html[data-theme='klipy'] .theme-opt.on { border-color: var(--hot); }
+html[data-theme='klipy'] .icon-btn.on { background: var(--accent); color: #ffffff; }

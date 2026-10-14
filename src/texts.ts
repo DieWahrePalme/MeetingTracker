@@ -176,6 +176,13 @@ export const t = {
     showAll: (n: number) => `Alle ${n} anzeigen`,
     showLess: 'Weniger anzeigen',
   },
+  theme: {
+    title: 'Design (Vorschau)',
+    note: 'Probiere Looks aus. Die Wahl gilt nur auf diesem Gerät.',
+    standard: 'Standard',
+    bon: 'Kassenbon',
+    klipy: 'Klipy-Stil',
+  },
   data: {
     title: 'Daten',
     backup: 'Sicherung',

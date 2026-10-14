@@ -103,6 +103,14 @@ immer nur der Stundensatz (Cent), das Gehalt wird nicht gespeichert.
 - **Suche mit Filter-Symbol:** Suchfeld und daneben ein Filter-Symbol (mit Zähler für aktive Filter). Es klappt Jahr/Monat/Tag, Bewertung und Sortierung auf. Bei aktiven Filtern steht darunter eine schlanke Zeile mit dem Ergebnis und "Zurücksetzen".
 - "Meeting starten" und "Nachtragen" stehen nebeneinander, die Bewertungs-Karte ist kompakter (Wert, Balken, eine Legendenzeile).
 
+## Design-Vorschau (2026-10-14, zur Auswahl)
+Im Reiter "Daten" lassen sich drei Looks umschalten (nur Farben und Formen, Wahl gilt pro Gerät, `localStorage` `meetingtracker.theme`), damit Moritz auf dem iPhone entscheiden kann:
+- **Standard:** ruhig, Banking-Gefühl (bisheriger Look).
+- **Kassenbon:** Papier und Tinte (hell `#F4F1EA` / dunkel `#0E0D0C`), Orange `#FF5B14` = Geld, Blau `#2B4BFF` = Zeit (der Kosten/Zeit-Schalter wechselt den Akzent), Tintenlinien, harte kleine Schatten an Buttons, gepunktete Bon-Linien, Beträge in Monospace im Detail, große Zahlen in Space Grotesk.
+- **Klipy-Stil:** dunkel `#141418`, Lila `#8800FF`, Gelb `#FFD60A` für die großen Zahlen, 3D-Buttons, Space Grotesk überall.
+Schrift: Space Grotesk (SIL OFL) über `@fontsource`, mit der App ausgeliefert, keine Fremdserver.
+Noch nicht gebaut (erst nach der Wahl): hochzählende Zahlen, Live-Meeting mit laufenden Ziffern und "Hitze"-Balken, Daumen-Pop, Kassenbon-Ausrollen.
+
 ## Gestaltung nach Apples HIG (2026-10-14, nach Screenshots von Moritz)
 Rein visuell, keine Logik. Getestet auf iPhone-Format mit 50 Personen, hell und dunkel.
 - Grundgröße 17 px (iOS), alle Größen in rem, Kontraste geprüft (Text auf Fläche mindestens 4,5:1).
