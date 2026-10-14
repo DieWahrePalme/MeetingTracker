@@ -49,8 +49,9 @@ html { font-size: 106.25%; /* 17 px Grundgröße wie in iOS */ -webkit-text-size
 body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.4; -webkit-font-smoothing: antialiased; }
 html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: none; }
 
-.app { max-width: 640px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right)) calc(104px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
-header { padding: 8px 4px 4px; }
+.app { max-width: 640px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+header { padding: 8px 0 4px; margin-bottom: 8px; }
+.brand { padding: 0 4px; }
 .brand { display: block; font-weight: 600; font-size: 0.9rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { display: flex; flex-direction: column; gap: 20px; }
 
@@ -190,6 +191,13 @@ select:disabled { opacity: 0.5; }
   .overlay { align-items: center; padding: 24px; }
   .sheet { border-radius: 32px; max-height: 88dvh; }
 }
+/* Tastatur offen: weniger Kopf, damit das Feld und die Buttons Platz haben */
+.overlay.kb { padding-top: 0; }
+.overlay.kb .grabber { display: none; }
+.overlay.kb .sheet { border-radius: 24px 24px 0 0; }
+.overlay.kb .sheet-head { padding-top: 8px; }
+.overlay.kb .sheet-actions { padding-bottom: 12px; }
+.overlay.kb .sheet-body { padding-bottom: 12px; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes up { from { transform: translateY(28px); opacity: 0; } }
 
@@ -220,14 +228,11 @@ select:disabled { opacity: 0.5; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
 .rated-line { display: flex; align-items: center; gap: 4px; }
 
-/* Tab-Leiste unten, durchscheinend */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: color-mix(in srgb, var(--card) 78%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6); border-top: 0.5px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
-.tabbar-inner { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
-.tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; border: 0; background: none; color: var(--muted); font-size: 0.72rem; font-weight: 600; }
-.tabbar button.on { color: var(--accent-ink); }
-@media (prefers-reduced-transparency: reduce) {
-  .tabbar { background: var(--card); -webkit-backdrop-filter: none; backdrop-filter: none; }
-}
+/* Reiter oben, wie auf einer normalen Webseite (scrollen mit der Seite weg) */
+.topnav { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 8px; border-bottom: 0.5px solid var(--line); }
+.topnav button { min-height: 48px; border: 0; background: none; color: var(--muted); font-weight: 600; font-size: 1rem; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 0; }
+.topnav button.on { color: var(--text); border-bottom-color: var(--accent); }
+.topnav button:active { opacity: 0.6; }
 
 /* Auswahl von Personen */
 .picker { display: flex; flex-direction: column; gap: 10px; }

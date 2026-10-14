@@ -29,13 +29,13 @@ only cost tracking. Idea from Moritz (2026-10-13).
 
 ## Bedienung bei vielen Personen (Wunsch von Moritz, 2026-10-14)
 Getestet mit 50 Personen auf iPhone-Format (393 x 659).
-- Drei Reiter in einer Leiste unten (Daumen-Reichweite): Meetings, Personen, Daten.
+- Drei Reiter oben wie auf einer normalen Webseite (scrollen mit der Seite weg, keine feste Leiste unten, damit sie nicht mit der Safari-Leiste kollidiert): Meetings, Personen, Daten.
   "Daten" enthält Unternehmen, Export/Import, Demo und Löschen (vorher ganz unten bei den Personen).
 - Fenster (Meeting, Person): Inhalt scrollt, die Buttons stehen fest am unteren Rand und sind immer sichtbar.
 - Personenauswahl im Meeting (Nachtragen, Bearbeiten, Live-Timer): bis 8 Personen als Chips, darüber Suche (ohne
   Beachtung von Groß/Kleinschreibung und Umlauten), Trefferliste, "Alle Treffer wählen", Enter wählt einen einzelnen Treffer,
   gewählte Personen stehen oben als Chips zum Entfernen, "Leeren".
-- Reiter Personen: Umschalter Personen / Meeting-Score, Suche, Meeting-Score zeigt zuerst die Top 10 ("Alle anzeigen").
+- Reiter Personen: Umschalter Liste / Teams / Score, Suche, Meeting-Score zeigt zuerst die Top 10 ("Alle anzeigen").
 
 ## Wiederkehrende Meetings vorschlagen (Wunsch von Moritz, 2026-10-14)
 Die App erkennt aus den gespeicherten Meetings, was regelmäßig stattfindet, und schlägt das nächste vor. Es wird nichts extra gespeichert (nur ausgeblendete Vorschläge).
@@ -102,7 +102,8 @@ Rein visuell, keine Logik. Getestet auf iPhone-Format mit 50 Personen, hell und 
 - Umschalter (Segmente) immer volle Breite und gleich breit. Chips-Reihen scrollen waagerecht statt umzubrechen.
 - Fenster (Sheets): Griff, Titel, Schließen oben (X), Buttons fest unten, Seite dahinter ist gesperrt (kein Durchscrollen).
 - Startseite: Gesamtkosten, dann "Meeting starten" und "Meeting nachtragen" zusammen, Bewertungs-Aufteilung, Suche, Filter eingeklappt (Zähler "n aktiv"), Sortierung, Liste.
-- Tab-Leiste unten durchscheinend (Blur), mit Rückfall auf einfarbig bei "Transparenz reduzieren". `theme-color` für hell und dunkel.
+- Reiter oben als Textreiter mit Unterstreichung. `theme-color` für hell und dunkel.
+- Tastatur (iPhone): Fenster richten sich nach dem sichtbaren Bereich (`visualViewport`), das angetippte Feld wird ins Bild gescrollt, Buttons bleiben sichtbar.
 - Texte: Verben auf Buttons, kurze Hinweise, "Std." bei Zeiten, Reiter "Score" statt "Meeting-Score" (passt in den Umschalter).
 
 ## Look and feel

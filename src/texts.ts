@@ -138,7 +138,7 @@ export const t = {
     cancel: 'Abbrechen',
     rank: 'Wer sitzt am meisten in Meetings?',
     search: 'Person suchen …',
-    viewList: 'Personen',
+    viewList: 'Liste',
     viewScore: 'Score',
     viewTeams: 'Teams',
     archived: 'Archiviert',
