@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 
-export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+/** Fenster von unten. Der Inhalt scrollt, die Buttons (`actions`) bleiben unten immer sichtbar. */
+export function Sheet({ title, onClose, children, actions }: { title: string; onClose: () => void; children: ReactNode; actions?: ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -11,7 +12,8 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     <div className="overlay" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
-        {children}
+        <div className="sheet-body">{children}</div>
+        {actions && <div className="sheet-actions">{actions}</div>}
       </div>
     </div>
   )

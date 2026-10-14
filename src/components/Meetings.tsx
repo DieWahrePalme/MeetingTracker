@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useData } from '../data/store'
 import type { Meeting } from '../data/types'
 import { formatDuration, formatEuro } from '../lib/money'
-import { costByRating, headCount, matches, matchesRating, meetingCost, noFilter, totalCost } from '../lib/stats'
+import { costByRating, headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, totalCost } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
 import { LiveCard } from './LiveCard'
@@ -17,11 +17,12 @@ export function Meetings() {
   const [filter, setFilter] = useState<Filter>(noFilter)
   const [sort, setSort] = useState<'newest' | 'expensive'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
+  const [search, setSearch] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
 
   const inPeriod = meetings.filter((m) => matches(m, filter))
-  const filtered = inPeriod.filter((m) => matchesRating(m, ratingFilter))
+  const filtered = inPeriod.filter((m) => matchesRating(m, ratingFilter) && matchesSearch(m, search))
   const split = costByRating(inPeriod)
   const splitTotal = totalCost(inPeriod)
   const anyRated = inPeriod.some((m) => m.rating)
@@ -30,7 +31,7 @@ export function Meetings() {
   )
   const max = Math.max(1, ...list.map(meetingCost))
   const periodActive = filter.year !== null || filter.month !== null || filter.day !== null
-  const active = periodActive || ratingFilter !== null
+  const active = periodActive || ratingFilter !== null || search.trim() !== ''
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
   const open = meetings.find((m) => m.id === openId)
 
@@ -68,6 +69,17 @@ export function Meetings() {
             </select>
           </label>
         </div>
+        {(meetings.length >= 6 || search) && (
+          <input
+            type="search"
+            className="input"
+            value={search}
+            placeholder={t.search.placeholder}
+            aria-label={t.search.placeholder}
+            autoComplete="off"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
         <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
           {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
             <button
@@ -92,6 +104,7 @@ export function Meetings() {
               onClick={() => {
                 setFilter(noFilter)
                 setRatingFilter(null)
+                setSearch('')
               }}
             >
               {t.filter.reset}

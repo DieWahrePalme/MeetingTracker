@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { costByRating, groupCost, headCount, matches, matchesRating, meetingCost, noFilter, personScores, totalCost } from './stats'
+import { matchesSearch, costByRating, groupCost, headCount, matches, matchesRating, meetingCost, noFilter, personScores, totalCost } from './stats'
 import type { Meeting } from '../data/types'
 
 const m = (startedAt: number, durationSec: number, rates: number[]): Meeting => ({
@@ -71,6 +71,16 @@ describe('Bewertung', () => {
     const s = personScores(ms)
     const p0 = s.find((x) => x.personId === 'p0')!
     expect(p0).toMatchObject({ meetings: 5, up: 1, down: 2 })
+  })
+})
+
+describe('Suche in der Meeting-Liste', () => {
+  const x: Meeting = { ...m(1, 60, [100]), title: 'Wochenplanung', participants: [{ personId: 'p', name: 'Jürgen Beispiel', rateCents: 100 }] }
+  it('findet nach Titel und Teilnehmer, ohne Umlaute und Groß/Kleinschreibung', () => {
+    expect(matchesSearch(x, 'wochen')).toBe(true)
+    expect(matchesSearch(x, 'JURGEN')).toBe(true)
+    expect(matchesSearch(x, 'xyz')).toBe(false)
+    expect(matchesSearch(x, '  ')).toBe(true)
   })
 })
 

@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { actions, useData } from '../data/store'
 import type { LiveMeeting } from '../data/types'
 import { costCents, formatDuration, formatEuro } from '../lib/money'
+import { PersonPicker } from './PersonPicker'
 import { RatingPicker } from './Rating'
+import { pickOptions } from '../lib/people'
 import { GroupFields, groupError, groupToInput, inputToGroup } from './GroupFields'
 import { t } from '../texts'
 
@@ -20,7 +22,7 @@ export function LiveCard() {
 }
 
 function LiveRunning({ live }: { live: LiveMeeting }) {
-  const { people } = useData()
+  const { people, teams, meetings } = useData()
   const [now, setNow] = useState(Date.now())
   const [group, setGroup] = useState(() => groupToInput(live.group))
   useEffect(() => {
@@ -48,21 +50,12 @@ function LiveRunning({ live }: { live: LiveMeeting }) {
       {people.length === 0 ? (
         <p className="muted">{t.live.needPeople}</p>
       ) : (
-        <div className="chips">
-          {people.map((p) => {
-            const on = live.personIds.includes(p.id)
-            return (
-              <button
-                key={p.id}
-                className={'chip' + (on ? ' on' : '')}
-                aria-pressed={on}
-                onClick={() => actions.updateLive({ personIds: on ? live.personIds.filter((x) => x !== p.id) : [...live.personIds, p.id] })}
-              >
-                {p.name}
-              </button>
-            )
-          })}
-        </div>
+        <PersonPicker
+          options={pickOptions(people, meetings, live.personIds)}
+          selected={live.personIds}
+          onChange={(ids) => actions.updateLive({ personIds: ids })}
+          teams={teams}
+        />
       )}
       <GroupFields
         value={group}

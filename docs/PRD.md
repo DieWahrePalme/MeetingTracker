@@ -27,6 +27,27 @@ only cost tracking. Idea from Moritz (2026-10-13).
 - "Meeting score" per person: who spends the most time in meetings, how many
   meetings, total hours, total cost caused. Ranking, simple bars.
 
+## Bedienung bei vielen Personen (Wunsch von Moritz, 2026-10-14)
+Getestet mit 50 Personen auf iPhone-Format (393 x 659).
+- Drei Reiter in einer Leiste unten (Daumen-Reichweite): Meetings, Personen, Daten.
+  "Daten" enthält Unternehmen, Export/Import, Demo und Löschen (vorher ganz unten bei den Personen).
+- Fenster (Meeting, Person): Inhalt scrollt, die Buttons stehen fest am unteren Rand und sind immer sichtbar.
+- Personenauswahl im Meeting (Nachtragen, Bearbeiten, Live-Timer): bis 8 Personen als Chips, darüber Suche (ohne
+  Beachtung von Groß/Kleinschreibung und Umlauten), Trefferliste, "Alle Treffer wählen", Enter wählt einen einzelnen Treffer,
+  gewählte Personen stehen oben als Chips zum Entfernen, "Leeren".
+- Reiter Personen: Umschalter Personen / Meeting-Score, Suche, Meeting-Score zeigt zuerst die Top 10 ("Alle anzeigen").
+
+## Teams, Archiv, Duplizieren, Suche (Wunsch von Moritz, 2026-10-14)
+- **Teams:** Im Reiter Personen gibt es den Umschalter "Teams". Ein Team hat einen Namen und Mitglieder. In der Meeting-Auswahl
+  (Nachtragen, Bearbeiten, Live) wählt ein Tipp auf den Team-Chip alle Mitglieder, ein zweiter Tipp wählt sie wieder ab.
+  Archivierte oder gelöschte Mitglieder werden dabei übersprungen. Daten: `teams: [{ id, name, personIds }]` (optional, alte Dateien ohne Teams funktionieren).
+- **Zuletzt genutzt zuerst:** In der Auswahl stehen Personen nach letzter Teilnahme oben, der Rest alphabetisch (aus den Meetings abgeleitet, nichts Zusätzliches gespeichert).
+- **Archiv:** Person mit Haken "Archiviert" erscheint nicht mehr in der Auswahl, bleibt aber in alten Meetings und im Meeting-Score.
+  In der Personenliste stehen archivierte Personen eingeklappt unter "Archiv anzeigen". Daten: `archived?: boolean`.
+- **Meeting duplizieren:** Im Meeting-Detail "Duplizieren": Formular mit gleichen Personen, Dauer, Pauschale und Titel, Datum heute, ohne Bewertung. Sätze werden neu aus den aktuellen Personen genommen.
+- **Suche in der Meeting-Liste:** Suchfeld (ab 6 Meetings) nach Titel oder Personenname, kombinierbar mit Zeitraum, Bewertung und Sortierung.
+- Kein CSV-Import (Moritz braucht ihn nicht).
+
 ## Meetings bewerten (Wunsch von Moritz, 2026-10-14)
 Jedes Meeting kann optional bewertet werden: Daumen hoch (gut), neutral, Daumen runter (schlecht).
 - Drei große Buttons mit eigenen SVG-Icons (keine Emojis), nochmal tippen entfernt die Bewertung.

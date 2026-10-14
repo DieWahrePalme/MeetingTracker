@@ -1,10 +1,12 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { actions, useData } from '../data/store'
-import type { Person } from '../data/types'
+import type { Person, Team } from '../data/types'
 import { centsToInput, formatEuro, formatHours, parseEuroToCents } from '../lib/money'
 import { NOMINAL_HOURS, PRODUCTIVE_HOURS, suggestedRateCents } from '../lib/salary'
+import { norm } from '../lib/people'
 import { personScores } from '../lib/stats'
 import { t } from '../texts'
+import { PersonPicker } from './PersonPicker'
 import { RatingIcon } from './Rating'
 import { Sheet } from './Sheet'
 
@@ -12,6 +14,7 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
   const [name, setName] = useState(person?.name ?? '')
   const [rate, setRate] = useState(person ? String(person.rateCents / 100).replace('.', ',') : '')
   const [tried, setTried] = useState(false)
+  const [archived, setArchived] = useState(person?.archived ?? false)
   const [calcOpen, setCalcOpen] = useState(false)
   const [salary, setSalary] = useState('')
   const [hoursMode, setHoursMode] = useState<'1700' | '2080' | 'custom'>('1700')
@@ -34,7 +37,32 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
   const nameErr = !name.trim() ? t.people.errName : ''
   const rateErr = cents === null ? t.people.errRate : ''
   return (
-    <Sheet title={person ? t.people.editTitle : t.people.newTitle} onClose={onClose}>
+    <Sheet title={person ? t.people.editTitle : t.people.newTitle} onClose={onClose} actions={<>
+        {person && (
+          <button
+            className="btn danger"
+            onClick={() => {
+              if (confirm(t.people.confirmDelete)) {
+                actions.deletePerson(person.id)
+                onClose()
+              }
+            }}
+          >
+            {t.people.delete}
+          </button>
+        )}
+        <button className="btn ghost" onClick={onClose}>{t.people.cancel}</button>
+        <button
+          className="btn primary"
+          onClick={() => {
+            if (nameErr || cents === null) return setTried(true)
+            actions.savePerson({ id: person?.id, name: name.trim(), rateCents: cents, archived })
+            onClose()
+          }}
+        >
+          {t.people.save}
+        </button>
+      </>}>
       <label className="field">
         <span>{t.people.name}</span>
         <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
@@ -111,139 +139,211 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
         </div>
       )}
       {person && <p className="muted">{t.people.rateNote}</p>}
-      <div className="row">
-        {person && (
+      {person && (
+        <label className="check">
+          <input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} />
+          <span>{t.people.archived}</span>
+        </label>
+      )}
+      {person && <p className="muted">{t.people.archivedNote}</p>}
+    </Sheet>
+  )
+}
+
+const SCORE_PREVIEW = 10
+
+function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
+  const { people } = useData()
+  const [name, setName] = useState(team?.name ?? '')
+  const [ids, setIds] = useState<string[]>(team?.personIds ?? [])
+  const [tried, setTried] = useState(false)
+  // Nur aktive Personen, alphabetisch (hier zählt nicht die letzte Nutzung)
+  const options = people
+    .filter((p) => !p.archived)
+    .map((p) => ({ id: p.id, name: p.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+  const nameErr = name.trim() ? '' : t.people.team.errName
+  const membersErr = ids.length > 0 ? '' : t.people.team.errMembers
+  return (
+    <Sheet
+      title={team ? t.people.team.editTitle : t.people.team.newTitle}
+      onClose={onClose}
+      actions={
+        <>
+          {team && (
+            <button
+              className="btn danger"
+              onClick={() => {
+                if (confirm(t.people.team.confirmDelete)) {
+                  actions.deleteTeam(team.id)
+                  onClose()
+                }
+              }}
+            >
+              {t.people.team.delete}
+            </button>
+          )}
+          <button className="btn ghost" onClick={onClose}>{t.people.team.cancel}</button>
           <button
-            className="btn danger"
+            className="btn primary"
             onClick={() => {
-              if (confirm(t.people.confirmDelete)) {
-                actions.deletePerson(person.id)
-                onClose()
-              }
+              if (nameErr || membersErr) return setTried(true)
+              actions.saveTeam({ id: team?.id, name: name.trim(), personIds: ids })
+              onClose()
             }}
           >
-            {t.people.delete}
+            {t.people.team.save}
           </button>
-        )}
-        <button className="btn ghost" onClick={onClose}>{t.people.cancel}</button>
-        <button
-          className="btn primary"
-          onClick={() => {
-            if (nameErr || cents === null) return setTried(true)
-            actions.savePerson({ id: person?.id, name: name.trim(), rateCents: cents })
-            onClose()
-          }}
-        >
-          {t.people.save}
-        </button>
+        </>
+      }
+    >
+      <label className="field">
+        <span>{t.people.team.name}</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        {tried && nameErr && <small className="error" role="alert">{nameErr}</small>}
+      </label>
+      <div className="field">
+        <span>{t.people.team.members}</span>
+        <PersonPicker options={options} selected={ids} onChange={setIds} />
+        {tried && membersErr && <small className="error" role="alert">{membersErr}</small>}
       </div>
     </Sheet>
   )
 }
 
+type View = 'list' | 'teams' | 'score'
+
 export function People() {
   const data = useData()
   const [editing, setEditing] = useState<Person | 'new' | null>(null)
-  const [msg, setMsg] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
-  const scores = personScores(data.meetings)
-  const maxSec = Math.max(1, ...scores.map((s) => s.seconds))
-
-  function download() {
-    const url = URL.createObjectURL(new Blob([actions.exportJson()], { type: 'application/json' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `meetingtracker-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  async function onImport(file: File) {
-    if (!confirm(t.data.importConfirm)) return
-    try {
-      actions.importJson(await file.text())
-      setMsg(t.data.importOk)
-    } catch {
-      setMsg(t.data.importFail)
-    }
-  }
+  const [editingTeam, setEditingTeam] = useState<Team | 'new' | null>(null)
+  const [view, setView] = useState<View>('list')
+  const [query, setQuery] = useState('')
+  const [showAll, setShowAll] = useState(false)
+  const [showArchive, setShowArchive] = useState(false)
+  const q = norm(query)
+  const byName = (a: Person, b: Person) => a.name.localeCompare(b.name, 'de')
+  const found = (q ? data.people.filter((p) => norm(p.name).includes(q)) : data.people).slice().sort(byName)
+  const people = found.filter((p) => !p.archived)
+  const archived = found.filter((p) => p.archived)
+  const archivedTotal = data.people.filter((p) => p.archived).length
+  const activeTotal = data.people.length - archivedTotal
+  const allScores = personScores(data.meetings)
+  const scores = q ? allScores.filter((s) => norm(s.name).includes(q)) : allScores
+  const maxSec = Math.max(1, ...allScores.map((s) => s.seconds))
+  const shownScores = showAll || q ? scores : scores.slice(0, SCORE_PREVIEW)
+  const personRow = (p: Person) => (
+    <li key={p.id}>
+      <button className={'row-item' + (p.archived ? ' archived' : '')} onClick={() => setEditing(p)}>
+        <strong className="grow">{p.name}</strong>
+        <span className="muted">{formatEuro(p.rateCents)}/h</span>
+      </button>
+    </li>
+  )
 
   return (
     <>
-      <label className="field company">
-        <span>{t.people.company}</span>
-        <input value={data.companyName} onChange={(e) => actions.setCompanyName(e.target.value)} />
-      </label>
-
-      {data.people.length === 0 ? (
-        <p className="muted empty">{t.people.empty}</p>
-      ) : (
-        <ul className="plain list">
-          {data.people.map((p) => (
-            <li key={p.id}>
-              <button className="row-item" onClick={() => setEditing(p)}>
-                <strong className="grow">{p.name}</strong>
-                <span className="muted">{formatEuro(p.rateCents)}/h</span>
-              </button>
-            </li>
+      <div className="people-top">
+        <div className="segment" role="group">
+          {(['list', 'teams', 'score'] as const).map((k) => (
+            <button key={k} className={view === k ? 'on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>
+              {k === 'list' ? t.people.viewList : k === 'teams' ? t.people.viewTeams : t.people.viewScore}
+            </button>
           ))}
-        </ul>
-      )}
-      <button className="btn primary wide" onClick={() => setEditing('new')}>{t.people.add}</button>
+        </div>
+        {view === 'teams' ? (
+          <button className="btn primary" onClick={() => setEditingTeam('new')} disabled={activeTotal === 0}>{t.people.team.add}</button>
+        ) : (
+          <button className="btn primary" onClick={() => setEditing('new')}>{t.people.add}</button>
+        )}
+      </div>
 
-      {scores.length > 0 && (
-        <section>
-          <h2>{t.people.title}</h2>
-          <p className="muted">{t.people.rank}</p>
-          <ol className="plain list">
-            {scores.map((s, i) => (
-              <li key={s.personId} className="score">
-                <span className="rank">{i + 1}</span>
-                <div className="grow">
-                  <div className="line">
-                    <strong>{s.name}</strong>
-                    <strong>{formatEuro(s.cents)}</strong>
-                  </div>
-                  <small className="muted">{t.people.stats(s.meetings, formatHours(s.seconds))}</small>
-                  {(s.up > 0 || s.down > 0) && (
-                    <small className="muted rated-line">
-                      <RatingIcon rating="up" size={14} /> {s.up} <RatingIcon rating="down" size={14} /> {s.down}
-                    </small>
-                  )}
-                  <span className="bar"><i style={{ width: `${(s.seconds / maxSec) * 100}%` }} /></span>
-                </div>
+      {view !== 'teams' && (data.people.length > 6 || query) && (
+        <input
+          type="search"
+          className="input"
+          value={query}
+          placeholder={t.people.search}
+          aria-label={t.people.search}
+          autoComplete="off"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
+      {view !== 'teams' && query && <p className="muted">{t.people.shown(view === 'list' ? found.length : scores.length, view === 'list' ? data.people.length : allScores.length)}</p>}
+
+      {view === 'list' && (
+        <>
+          {data.people.length === 0 ? (
+            <p className="muted empty">{t.people.empty}</p>
+          ) : people.length === 0 && archived.length === 0 ? (
+            <p className="muted empty">{t.people.noMatch}</p>
+          ) : (
+            <ul className="plain list">{people.map(personRow)}</ul>
+          )}
+          {archivedTotal > 0 && (
+            <>
+              <button className="link archive-toggle" onClick={() => setShowArchive(!showArchive)} aria-expanded={showArchive || !!q}>
+                {showArchive || q ? t.people.hideArchive : t.people.showArchive} · {t.people.archiveTitle(archivedTotal)}
+              </button>
+              {(showArchive || q) && <ul className="plain list">{archived.map(personRow)}</ul>}
+            </>
+          )}
+        </>
+      )}
+
+      {view === 'teams' &&
+        (data.teams.length === 0 ? (
+          <p className="muted empty">{t.people.team.empty}</p>
+        ) : (
+          <ul className="plain list">
+            {data.teams.map((tm) => (
+              <li key={tm.id}>
+                <button className="row-item" onClick={() => setEditingTeam(tm)}>
+                  <strong className="grow">{tm.name}</strong>
+                  <span className="muted">{t.people.team.count(tm.personIds.length)}</span>
+                </button>
               </li>
             ))}
-          </ol>
+          </ul>
+        ))}
+
+      {view === 'score' && (
+        <section>
+          <p className="muted">{t.people.rank}</p>
+          {scores.length === 0 ? (
+            <p className="muted empty">{q ? t.people.noMatch : t.list.empty}</p>
+          ) : (
+            <ol className="plain list">
+              {shownScores.map((s) => (
+                <li key={s.personId} className="score">
+                  <span className="rank">{allScores.indexOf(s) + 1}</span>
+                  <div className="grow">
+                    <div className="line">
+                      <strong>{s.name}</strong>
+                      <strong>{formatEuro(s.cents)}</strong>
+                    </div>
+                    <small className="muted">{t.people.stats(s.meetings, formatHours(s.seconds))}</small>
+                    {(s.up > 0 || s.down > 0) && (
+                      <small className="muted rated-line">
+                        <RatingIcon rating="up" size={14} /> {s.up} <RatingIcon rating="down" size={14} /> {s.down}
+                      </small>
+                    )}
+                    <span className="bar"><i style={{ width: `${(s.seconds / maxSec) * 100}%` }} /></span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+          {!q && scores.length > SCORE_PREVIEW && (
+            <button className="btn ghost wide" onClick={() => setShowAll(!showAll)}>
+              {showAll ? t.people.showLess : t.people.showAll(scores.length)}
+            </button>
+          )}
         </section>
       )}
 
-      <section>
-        <h2>{t.data.title}</h2>
-        <p className="muted">{t.data.note}</p>
-        <div className="stack">
-          <button className="btn ghost" onClick={download}>{t.data.export}</button>
-          <button className="btn ghost" onClick={() => fileRef.current?.click()}>{t.data.import}</button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              e.target.value = ''
-              if (f) void onImport(f)
-            }}
-          />
-          {data.people.length === 0 && data.meetings.length === 0 && (
-            <button className="btn ghost" onClick={actions.loadDemo}>{t.data.demo}</button>
-          )}
-          <button className="btn danger" onClick={() => confirm(t.data.clearConfirm) && actions.clearAll()}>{t.data.clear}</button>
-        </div>
-        {msg && <p className="muted" role="status">{msg}</p>}
-      </section>
-
       {editing && <PersonForm person={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
+      {editingTeam && <TeamForm team={editingTeam === 'new' ? undefined : editingTeam} onClose={() => setEditingTeam(null)} />}
     </>
   )
 }

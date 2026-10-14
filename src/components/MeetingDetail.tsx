@@ -10,9 +10,25 @@ import { Sheet } from './Sheet'
 
 export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => void }) {
   const [editing, setEditing] = useState(false)
+  const [copying, setCopying] = useState(false)
   if (editing) return <MeetingForm meeting={meeting} onClose={onClose} />
+  if (copying) return <MeetingForm copyFrom={meeting} onClose={onClose} />
   return (
-    <Sheet title={meeting.title} onClose={onClose}>
+    <Sheet title={meeting.title} onClose={onClose} actions={<>
+        <button
+          className="btn danger"
+          onClick={() => {
+            if (confirm(t.detail.confirmDelete)) {
+              actions.deleteMeeting(meeting.id)
+              onClose()
+            }
+          }}
+        >
+          {t.detail.delete}
+        </button>
+        <button className="btn ghost" onClick={() => setEditing(true)}>{t.detail.edit}</button>
+        <button className="btn primary" onClick={onClose}>{t.detail.close}</button>
+      </>}>
       <p className="muted">
         {new Date(meeting.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
         {formatDuration(meeting.durationSec)}
@@ -38,22 +54,9 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
           </li>
         )}
       </ul>
+      <button className="btn ghost wide" onClick={() => setCopying(true)}>{t.detail.duplicate}</button>
+      <small className="muted">{t.detail.duplicateNote}</small>
       <RatingPicker value={meeting.rating} onChange={(r) => actions.setRating(meeting.id, r ?? null)} />
-      <div className="row">
-        <button
-          className="btn danger"
-          onClick={() => {
-            if (confirm(t.detail.confirmDelete)) {
-              actions.deleteMeeting(meeting.id)
-              onClose()
-            }
-          }}
-        >
-          {t.detail.delete}
-        </button>
-        <button className="btn ghost" onClick={() => setEditing(true)}>{t.detail.edit}</button>
-        <button className="btn primary" onClick={onClose}>{t.detail.close}</button>
-      </div>
     </Sheet>
   )
 }

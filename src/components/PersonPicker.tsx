@@ -1,0 +1,138 @@
+import { useState } from 'react'
+import type { Team } from '../data/types'
+import { norm } from '../lib/people'
+import type { PickOption } from '../lib/people'
+import { t } from '../texts'
+
+/**
+ * Personenauswahl. Teams (falls vorhanden) wählen mit einem Tipp alle Mitglieder.
+ * Bis 8 Personen als Chips, darüber mit Suche, Trefferliste und Übersicht der Auswahl.
+ */
+export function PersonPicker({
+  options,
+  selected,
+  onChange,
+  teams = [],
+}: {
+  options: PickOption[]
+  selected: string[]
+  onChange: (ids: string[]) => void
+  teams?: Team[]
+}) {
+  const [query, setQuery] = useState('')
+  const toggle = (id: string) => onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
+
+  // Teams: nur Mitglieder, die gerade wählbar sind (nicht archiviert, nicht gelöscht)
+  const available = new Set(options.map((o) => o.id))
+  const teamChips = teams
+    .map((tm) => ({ tm, members: tm.personIds.filter((id) => available.has(id)) }))
+    .filter((x) => x.members.length > 0)
+  const teamRow = teamChips.length > 0 && (
+    <div className="team-row">
+      <span className="muted">{t.pick.teams}</span>
+      <div className="chips">
+        {teamChips.map(({ tm, members }) => {
+          const on = members.every((id) => selected.includes(id))
+          return (
+            <button
+              key={tm.id}
+              type="button"
+              className={'chip team' + (on ? ' on' : '')}
+              aria-pressed={on}
+              onClick={() => onChange(on ? selected.filter((id) => !members.includes(id)) : [...new Set([...selected, ...members])])}
+            >
+              {tm.name} ({members.length})
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  if (options.length <= 8) {
+    return (
+      <div className="picker">
+        {teamRow}
+        <div className="chips">
+          {options.map((o) => (
+            <button key={o.id} type="button" className={'chip' + (selected.includes(o.id) ? ' on' : '')} aria-pressed={selected.includes(o.id)} onClick={() => toggle(o.id)}>
+              {o.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const q = norm(query)
+  const matches = q ? options.filter((o) => norm(o.name).includes(q)) : options
+  const chosen = options.filter((o) => selected.includes(o.id))
+  const allShownSelected = matches.length > 0 && matches.every((o) => selected.includes(o.id))
+
+  return (
+    <div className="picker">
+      {teamRow}
+      <input
+        type="search"
+        className="input"
+        value={query}
+        placeholder={t.pick.search}
+        aria-label={t.pick.search}
+        enterKeyHint="done"
+        autoComplete="off"
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            if (matches.length === 1) {
+              toggle(matches[0].id)
+              setQuery('')
+            }
+          }
+        }}
+      />
+      <div className="picker-head">
+        <span>{t.pick.selected(chosen.length)}</span>
+        <span className="picker-actions">
+          {q && matches.length > 0 && (
+            <button
+              type="button"
+              className="link"
+              onClick={() => onChange(allShownSelected ? selected.filter((id) => !matches.some((o) => o.id === id)) : [...new Set([...selected, ...matches.map((o) => o.id)])])}
+            >
+              {allShownSelected ? t.pick.unselectShown(matches.length) : t.pick.selectShown(matches.length)}
+            </button>
+          )}
+          {chosen.length > 0 && (
+            <button type="button" className="link" onClick={() => onChange([])}>
+              {t.pick.clear}
+            </button>
+          )}
+        </span>
+      </div>
+      {chosen.length > 0 && (
+        <div className="chips picked">
+          {chosen.map((o) => (
+            <button key={o.id} type="button" className="chip on" aria-label={t.pick.remove(o.name)} onClick={() => toggle(o.id)}>
+              {o.name} <span aria-hidden="true">×</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <ul className="plain pick-list">
+        {matches.length === 0 && <li className="muted pick-empty">{t.pick.none}</li>}
+        {matches.map((o) => {
+          const on = selected.includes(o.id)
+          return (
+            <li key={o.id}>
+              <button type="button" className={'pick-row' + (on ? ' on' : '')} aria-pressed={on} onClick={() => toggle(o.id)}>
+                <span className="box" aria-hidden="true">{on ? '✓' : ''}</span>
+                {o.name}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}

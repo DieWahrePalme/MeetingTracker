@@ -3,6 +3,8 @@ import { actions, useData } from '../data/store'
 import type { Meeting, Rating } from '../data/types'
 import { t } from '../texts'
 import { GroupFields, groupError, groupToInput, inputToGroup } from './GroupFields'
+import { pickOptions } from '../lib/people'
+import { PersonPicker } from './PersonPicker'
 import { RatingPicker } from './Rating'
 import { Sheet } from './Sheet'
 
@@ -12,24 +14,23 @@ const toDateStr = (ms: number) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: () => void }) {
-  const { people } = useData()
+/** `meeting` = bearbeiten, `copyFrom` = als Vorlage für ein neues Meeting (Duplizieren). */
+export function MeetingForm({ meeting, copyFrom, onClose }: { meeting?: Meeting; copyFrom?: Meeting; onClose: () => void }) {
+  const { people, teams, meetings } = useData()
+  const src = meeting ?? copyFrom
   const initialDate = toDateStr(meeting?.startedAt ?? Date.now())
-  const [title, setTitle] = useState(meeting?.title ?? '')
+  const [title, setTitle] = useState(src?.title ?? '')
   const [date, setDate] = useState(initialDate)
-  const dur = meeting?.durationSec ?? 1800
+  const dur = src?.durationSec ?? 1800
   const [h, setH] = useState(String(Math.floor(dur / 3600)))
   const [m, setM] = useState(String(Math.floor((dur % 3600) / 60)))
   const [s, setS] = useState(String(dur % 60))
-  const [ids, setIds] = useState<string[]>(meeting?.participants.map((p) => p.personId) ?? [])
-  const [group, setGroup] = useState(groupToInput(meeting?.group))
+  const [ids, setIds] = useState<string[]>(src?.participants.map((p) => p.personId) ?? [])
+  const [group, setGroup] = useState(groupToInput(src?.group))
   const [rating, setRating] = useState<Rating | undefined>(meeting?.rating)
 
-  // Auch gelöschte Personen aus dem Meeting bleiben wählbar.
-  const options = [
-    ...people.map((p) => ({ id: p.id, name: p.name })),
-    ...(meeting?.participants.filter((p) => !people.some((x) => x.id === p.personId)).map((p) => ({ id: p.personId, name: p.name })) ?? []),
-  ]
+  // Zuletzt genutzte zuerst; archivierte nur, wenn sie schon im Meeting sind; gelöschte Personen aus dem Meeting bleiben wählbar.
+  const options = pickOptions(people, meetings, src?.participants.map((p) => p.personId) ?? [], src?.participants ?? [])
 
   const durationSec = (Number(h) || 0) * 3600 + (Number(m) || 0) * 60 + (Number(s) || 0)
   const flat = inputToGroup(group)
@@ -48,7 +49,10 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
   }
 
   return (
-    <Sheet title={meeting ? t.form.editTitle : t.form.newTitle} onClose={onClose}>
+    <Sheet title={meeting ? t.form.editTitle : copyFrom ? t.form.copyTitle : t.form.newTitle} onClose={onClose} actions={<>
+        <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>
+        <button className="btn primary" disabled={!!error} onClick={save}>{t.form.save}</button>
+      </>}>
       <label className="field">
         <span>{t.form.title}</span>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Meeting" />
@@ -73,28 +77,12 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
         {options.length === 0 ? (
           <p className="muted">{t.form.noPeople}</p>
         ) : (
-          <div className="chips">
-            {options.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                className={'chip' + (ids.includes(o.id) ? ' on' : '')}
-                aria-pressed={ids.includes(o.id)}
-                onClick={() => setIds(ids.includes(o.id) ? ids.filter((x) => x !== o.id) : [...ids, o.id])}
-              >
-                {o.name}
-              </button>
-            ))}
-          </div>
+          <PersonPicker options={options} selected={ids} onChange={setIds} teams={teams} />
         )}
       </div>
       <GroupFields value={group} onChange={setGroup} />
       <RatingPicker value={rating} onChange={setRating} />
       {error && <p className="error">{error}</p>}
-      <div className="row">
-        <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>
-        <button className="btn primary" disabled={!!error} onClick={save}>{t.form.save}</button>
-      </div>
     </Sheet>
   )
 }

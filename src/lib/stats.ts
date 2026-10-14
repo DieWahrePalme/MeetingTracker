@@ -1,5 +1,6 @@
 import { costCents } from './money'
 import type { Meeting, Rating } from '../data/types'
+import { norm } from './people'
 
 export interface Filter {
   year: number | null
@@ -34,6 +35,12 @@ export function matches(m: Meeting, f: Filter): boolean {
     (f.month === null || d.getMonth() === f.month) &&
     (f.day === null || d.getDate() === f.day)
   )
+}
+
+/** Suche in der Meeting-Liste: Titel oder Name eines Teilnehmers. */
+export function matchesSearch(m: Meeting, query: string): boolean {
+  const q = norm(query)
+  return !q || norm(m.title).includes(q) || m.participants.some((p) => norm(p.name).includes(q))
 }
 
 export type RatingFilter = Rating | 'none' | null

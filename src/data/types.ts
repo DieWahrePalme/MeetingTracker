@@ -2,6 +2,14 @@ export interface Person {
   id: string
   name: string
   rateCents: number // Cent pro Stunde
+  archived?: boolean // archiviert: nicht mehr in der Auswahl, alte Meetings bleiben
+}
+
+/** Gespeichertes Team: ein Tipp wählt alle Mitglieder für ein Meeting. */
+export interface Team {
+  id: string
+  name: string
+  personIds: string[]
 }
 
 /** Kopie der Person zum Zeitpunkt des Speicherns, damit spätere Satzänderungen alte Meetings nicht ändern. */
@@ -41,6 +49,7 @@ export interface AppData {
   version: 1
   companyName: string
   people: Person[]
+  teams: Team[]
   meetings: Meeting[]
   live: LiveMeeting | null
 }

@@ -1,6 +1,6 @@
 // Die einzige Stelle, die Daten speichert. Später kann hier ein Backend angeschlossen werden.
 import { useSyncExternalStore } from 'react'
-import type { AppData, FlatGroup, Meeting, Participant, Person, Rating } from './types'
+import type { AppData, FlatGroup, Meeting, Participant, Person, Rating, Team } from './types'
 
 const KEY = 'meetingtracker.v1'
 
@@ -8,6 +8,7 @@ const emptyData = (): AppData => ({
   version: 1,
   companyName: 'Unternehmen A',
   people: [],
+  teams: [],
   meetings: [],
   live: null,
 })
@@ -38,7 +39,14 @@ export function parseData(raw: unknown): AppData {
   }
   const people = raw.people.map((p): Person => {
     if (!isObj(p) || !isStr(p.id) || !isStr(p.name) || !isInt(p.rateCents)) throw new Error('Ungültige Person')
-    return { id: p.id, name: p.name, rateCents: p.rateCents }
+    return { id: p.id, name: p.name, rateCents: p.rateCents, ...(p.archived === true && { archived: true }) }
+  })
+  // Teams sind optional (alte Dateien haben keine)
+  const rawTeams = raw.teams === undefined || raw.teams === null ? [] : raw.teams
+  if (!Array.isArray(rawTeams)) throw new Error('Ungültige Teams')
+  const teams = rawTeams.map((x): Team => {
+    if (!isObj(x) || !isStr(x.id) || !isStr(x.name) || !Array.isArray(x.personIds)) throw new Error('Ungültiges Team')
+    return { id: x.id, name: x.name, personIds: x.personIds.filter(isStr) }
   })
   const meetings = raw.meetings.map((m): Meeting => {
     if (!isObj(m) || !isStr(m.id) || !isStr(m.title) || !isInt(m.startedAt) || !isInt(m.durationSec) || !Array.isArray(m.participants)) {
@@ -64,7 +72,7 @@ export function parseData(raw: unknown): AppData {
     }
     live = { title: raw.live.title, startedAt: raw.live.startedAt, personIds: raw.live.personIds.filter(isStr), ...(group && { group }), ...(rating && { rating }) }
   }
-  return { version: 1, companyName: raw.companyName, people, meetings, live }
+  return { version: 1, companyName: raw.companyName, people, teams, meetings, live }
 }
 
 function load(): AppData {
@@ -111,15 +119,36 @@ export const actions = {
   setCompanyName(name: string) {
     set({ ...state, companyName: name })
   },
-  savePerson(p: { id?: string; name: string; rateCents: number }) {
+  savePerson(p: { id?: string; name: string; rateCents: number; archived?: boolean }) {
     if (p.id) {
-      set({ ...state, people: state.people.map((x) => (x.id === p.id ? { ...x, name: p.name, rateCents: p.rateCents } : x)) })
+      set({
+        ...state,
+        people: state.people.map((x) => {
+          if (x.id !== p.id) return x
+          const { archived: _old, ...rest } = x
+          return { ...rest, name: p.name, rateCents: p.rateCents, ...(p.archived && { archived: true }) }
+        }),
+      })
     } else {
       set({ ...state, people: [...state.people, { id: uid(), name: p.name, rateCents: p.rateCents }] })
     }
   },
   deletePerson(id: string) {
-    set({ ...state, people: state.people.filter((x) => x.id !== id) })
+    set({
+      ...state,
+      people: state.people.filter((x) => x.id !== id),
+      teams: state.teams.map((tm) => ({ ...tm, personIds: tm.personIds.filter((pid) => pid !== id) })),
+    })
+  },
+  saveTeam(tm: { id?: string; name: string; personIds: string[] }) {
+    if (tm.id) {
+      set({ ...state, teams: state.teams.map((x) => (x.id === tm.id ? { ...x, name: tm.name, personIds: tm.personIds } : x)) })
+    } else {
+      set({ ...state, teams: [...state.teams, { id: uid(), name: tm.name, personIds: tm.personIds }] })
+    }
+  },
+  deleteTeam(id: string) {
+    set({ ...state, teams: state.teams.filter((x) => x.id !== id) })
   },
   /** Neue Teilnehmer bekommen den aktuellen Satz, schon vorhandene behalten ihren gespeicherten Satz. */
   saveMeeting(m: { id?: string; title: string; startedAt: number; durationSec: number; personIds: string[]; group?: FlatGroup | null; rating?: Rating | null }) {
@@ -203,6 +232,7 @@ export const actions = {
     set({
       ...state,
       people,
+      teams: [{ id: uid(), name: 'Team Beispiel', personIds: [people[0].id, people[1].id, people[2].id] }],
       meetings: [
         mk('Wochenplanung', 1, 30, [0, 1], undefined, 'up'),
         mk('Abstimmung Projekt', 3, 90, [0, 1, 2], undefined, 'neutral'),
