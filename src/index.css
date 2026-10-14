@@ -23,6 +23,9 @@
   --danger-soft: rgba(209, 52, 75, 0.1);
   --good: #1e9e6a;
   --neutral: #8a93a3;
+  --money-ink: #b93a05; /* Geld als Schrift/Symbol auf hellem Grund */
+  --time-ink: #2038d1; /* Zeit als Schrift/Symbol */
+  --accent-big: #d94a08; /* große Zahl, Modusfarbe (3,8:1) */
   --paper: #fbf8f1; /* Bon-Papier, in beiden Modi hell */
   --paper-ink: #14110f;
   --radius: 18px;
@@ -32,7 +35,7 @@
   font-family: system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
   color-scheme: light dark;
 }
-:root[data-metric='time'] { --accent: #2b4bff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; --on-accent: #ffffff; }
+:root[data-metric='time'] { --accent: #2b4bff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; --on-accent: #ffffff; --accent-big: #2b4bff; }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0e0d0c;
@@ -45,6 +48,9 @@
     --ink: #000000;
     --sel-bg: #f4f1ea;
     --sel-fg: #0e0d0c;
+    --money-ink: #ff9a66;
+    --time-ink: #9db0ff;
+    --accent-big: #ff7a3d;
     --accent: #ff7a3d;
     --accent-ink: #ff9a66;
     --accent-soft: rgba(255, 122, 61, 0.2);
@@ -55,7 +61,7 @@
     --good: #4cd6a0;
     --neutral: #9aa3b2;
   }
-  :root[data-metric='time'] { --accent: #7088ff; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); --on-accent: #0e0d0c; }
+  :root[data-metric='time'] { --accent: #7088ff; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); --on-accent: #0e0d0c; --accent-big: #8ea2ff; }
 }
 
 * { box-sizing: border-box; }
@@ -341,7 +347,9 @@ select:disabled { opacity: 0.5; }
 .chip.team { box-shadow: inset 0 0 0 1.5px var(--edge); }
 .metric-switch { background: transparent; border: 2px solid var(--edge); }
 .metric-switch .thumb { background: var(--accent); box-shadow: none; }
-.metric-switch .ico { color: var(--muted); }
+.metric-switch .ico:first-of-type { color: var(--money-ink); }
+.metric-switch .ico:last-of-type { color: var(--time-ink); }
+.metric-switch .thumb { transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s; }
 .metric-switch:not(.time) .ico:first-of-type, .metric-switch.time .ico:last-of-type { color: var(--on-accent); }
 .topnav { border-bottom: 2px solid var(--edge); }
 .topnav button.on { border-bottom-color: var(--accent); color: var(--text); }
@@ -391,3 +399,9 @@ select:disabled { opacity: 0.5; }
 .stamp { position: absolute; right: -2px; top: -2px; transform: rotate(-9deg); padding: 4px 10px; border: 3px double #d1450a; border-radius: 6px; color: #d1450a; font-weight: 700; letter-spacing: 0.12em; text-align: center; line-height: 1.2; background: rgba(251, 248, 241, 0.6); animation: stamp 0.35s 1.1s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
 .stamp small { display: block; font-size: 0.72rem; letter-spacing: 0.06em; }
 @keyframes stamp { from { transform: rotate(-9deg) scale(2.4); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: 0.92; } }
+
+/* ===== Modusfarbe: Orange = Geld, Blau = Zeit, damit man den Modus sofort erkennt ===== */
+.total { color: var(--accent-big); transition: color 0.3s; }
+.hero .label { color: var(--accent-ink); font-weight: 600; transition: color 0.3s; }
+.row-item .cost { color: var(--accent-ink); }
+.bar i { transition: width 0.4s ease, background-color 0.3s; }
