@@ -4,6 +4,7 @@ import type { Meeting } from '../data/types'
 import { costCents, formatDuration, formatEuro } from '../lib/money'
 import { groupCost, headCount, meetingCost, personSeconds } from '../lib/stats'
 import { t } from '../texts'
+import { CountUp } from './CountUp'
 import { MeetingForm } from './MeetingForm'
 import { RatingPicker } from './Rating'
 import { Sheet } from './Sheet'
@@ -29,7 +30,7 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
         <button className="btn primary" onClick={() => setEditing(true)}>{t.detail.edit}</button>
       </>}>
       <div className="detail-top">
-        <p className="big">{formatEuro(meetingCost(meeting))}</p>
+        <p className="big"><CountUp value={meetingCost(meeting)} format={formatEuro} /></p>
         <p className="muted">
           {new Date(meeting.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
           {formatDuration(meeting.durationSec)} Std.

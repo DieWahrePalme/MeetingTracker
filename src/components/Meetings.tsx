@@ -7,7 +7,7 @@ import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, personSeconds, valueByRating } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
-import { applyMetric } from '../theme'
+import { CountUp } from './CountUp'
 import { LiveCard } from './LiveCard'
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingForm } from './MeetingForm'
@@ -28,7 +28,10 @@ function useMetric(): [Metric, (m: Metric) => void] {
       return 'cost'
     }
   })
-  useEffect(() => applyMetric(metric), [metric])
+  // Der Akzent (Orange = Geld, Blau = Zeit) hängt am Attribut data-metric
+  useEffect(() => {
+    document.documentElement.dataset.metric = metric
+  }, [metric])
   return [
     metric,
     (m) => {
@@ -70,7 +73,8 @@ export function Meetings() {
   const filterCount = (filter.year !== null ? 1 : 0) + (filter.month !== null ? 1 : 0) + (filter.day !== null ? 1 : 0) + (ratingFilter !== null ? 1 : 0)
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
   // Die große Zahl schrumpft, wenn sie länger wird als etwa "5.000,60 €", damit sie in eine Zeile passt.
-  const heroText = fmt(sum(meetings))
+  const heroValue = sum(meetings)
+  const heroText = fmt(heroValue)
   const open = meetings.find((m) => m.id === openId)
   const suggestions = suggestRecurring(meetings, Date.now(), hiddenSuggestions)
 
@@ -97,7 +101,7 @@ export function Meetings() {
           </button>
         </div>
         <p className="total" style={{ fontSize: `calc(clamp(2.5rem, 13vw, 3.8rem) * ${Math.min(1, 10 / heroText.length)})` }}>
-          {heroText}
+          <CountUp value={heroValue} format={fmt} resetKey={metric} />
         </p>
         <p className="muted">
           {metric === 'cost'
@@ -117,7 +121,7 @@ export function Meetings() {
         <section className="card split">
           <div className="line">
             <small className="muted">{metric === 'cost' ? t.rating.badCost : t.rating.badTime}</small>
-            <strong className="mid bad">{fmt(split.down.value)}</strong>
+            <strong className="mid bad"><CountUp value={split.down.value} format={fmt} resetKey={metric} /></strong>
           </div>
           <div className="stack-bar" role="img" aria-label={t.rating.split}>
             {(['up', 'neutral', 'down', 'none'] as RatingKey[]).map((k) =>
@@ -213,7 +217,7 @@ export function Meetings() {
         <div className="line result-line">
           <div>
             <small className="muted">{t.filter.result}</small>
-            <strong className="mid">{fmt(sum(filtered))}</strong>
+            <strong className="mid"><CountUp value={sum(filtered)} format={fmt} resetKey={metric} duration={500} /></strong>
           </div>
           <button
             className="link"
@@ -231,7 +235,7 @@ export function Meetings() {
       {list.length === 0 ? (
         <p className="muted empty">{meetings.length === 0 ? t.list.empty : t.list.emptyFiltered}</p>
       ) : (
-        <ul className="plain list">
+        <ul className="plain list meeting-list">
           {list.map((m) => (
             <li key={m.id}>
               <button className="row-item" onClick={() => setOpenId(m.id)}>
@@ -245,7 +249,7 @@ export function Meetings() {
                   </small>
                   <span className="bar"><i style={{ width: `${(valueOf(m) / max) * 100}%` }} /></span>
                 </div>
-                <strong className="cost">{fmt(valueOf(m))}</strong>
+                <strong className="cost"><CountUp value={valueOf(m)} format={fmt} resetKey={metric} duration={550} /></strong>
               </button>
             </li>
           ))}

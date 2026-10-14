@@ -1,14 +1,11 @@
 import { useRef, useState } from 'react'
 import { actions, useData } from '../data/store'
 import { t } from '../texts'
-import { THEMES, applyTheme, getTheme } from '../theme'
-import type { Theme } from '../theme'
 
 /** Reiter "Daten": Unternehmen, Sicherung (Export/Import), Demo und Löschen. */
 export function Data() {
   const data = useData()
   const [msg, setMsg] = useState('')
-  const [theme, setTheme] = useState<Theme>(getTheme())
   const fileRef = useRef<HTMLInputElement>(null)
 
   function download() {
@@ -36,31 +33,6 @@ export function Data() {
         <span>{t.people.company}</span>
         <input value={data.companyName} onChange={(e) => actions.setCompanyName(e.target.value)} />
       </label>
-
-      <section className="card">
-        <h2>{t.theme.title}</h2>
-        <p className="muted">{t.theme.note}</p>
-        <div className="theme-picker" role="group" aria-label={t.theme.title}>
-          {THEMES.map((k) => (
-            <button
-              key={k}
-              className={'theme-opt' + (theme === k ? ' on' : '')}
-              aria-pressed={theme === k}
-              onClick={() => {
-                setTheme(k)
-                applyTheme(k)
-              }}
-            >
-              <span className={`swatch swatch-${k}`} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-              <span>{t.theme[k]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
 
       <section className="card">
         <h2>{t.data.backup}</h2>

@@ -92,3 +92,21 @@ describe('Teams und Archiv', () => {
     actions.clearAll()
   })
 })
+
+describe('Live-Meeting beenden', () => {
+  it('stopLive speichert das Meeting und liefert es für den Bon zurück', () => {
+    actions.clearAll()
+    actions.savePerson({ name: 'A', rateCents: 3000 })
+    const pid = JSON.parse(actions.exportJson()).people[0].id
+    actions.startLive()
+    actions.updateLive({ title: 'Test', personIds: [pid], rating: 'up' })
+    const m = actions.stopLive()
+    expect(m?.title).toBe('Test')
+    expect(m?.rating).toBe('up')
+    expect(m?.participants).toHaveLength(1)
+    expect(m?.durationSec).toBeGreaterThanOrEqual(1)
+    expect(JSON.parse(actions.exportJson()).meetings).toHaveLength(1)
+    expect(actions.stopLive()).toBeUndefined() // nichts mehr am Laufen
+    actions.clearAll()
+  })
+})

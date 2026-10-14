@@ -174,6 +174,7 @@ export const actions = {
       ...(m.rating && { rating: m.rating }),
     }
     set({ ...state, meetings: old ? state.meetings.map((x) => (x.id === old.id ? meeting : x)) : [...state.meetings, meeting] })
+    return meeting
   },
   /** Bewertung direkt am gespeicherten Meeting setzen oder (null) entfernen. */
   setRating(id: string, rating: Rating | null) {
@@ -206,12 +207,14 @@ export const actions = {
     }
     set({ ...state, live: next })
   },
-  stopLive() {
+  /** Beendet das laufende Meeting, speichert es und liefert es zurück (für den Bon). */
+  stopLive(): Meeting | undefined {
     const l = state.live
-    if (!l) return
+    if (!l) return undefined
     const durationSec = Math.max(1, Math.round((Date.now() - l.startedAt) / 1000))
-    actions.saveMeeting({ title: l.title.trim() || 'Meeting', startedAt: l.startedAt, durationSec, personIds: l.personIds, group: l.group, rating: l.rating })
+    const saved = actions.saveMeeting({ title: l.title.trim() || 'Meeting', startedAt: l.startedAt, durationSec, personIds: l.personIds, group: l.group, rating: l.rating })
     set({ ...state, live: null })
+    return saved
   },
   cancelLive() {
     set({ ...state, live: null })

@@ -2,46 +2,60 @@
    Kapsel-Buttons, gleich breite Umschalter, Sheets mit Griff). Texte in rem, damit sie mit der
    Schriftgröße des Geräts mitwachsen. */
 
+/* Kassenbon: Papier und Tinte. Orange = Geld, Blau = Zeit (Akzent wechselt mit dem Kosten/Zeit-Schalter). */
 :root {
-  --bg: #f2f3f7;
-  --card: #ffffff;
-  --text: #14171c;
-  --muted: #5b6270; /* 5,5:1 auf --bg */
-  --line: rgba(60, 66, 80, 0.16);
-  --fill: rgba(120, 124, 140, 0.13); /* graue Flächen: Eingabefelder, zweite Buttons */
-  --accent: #3b5bfd;
-  --accent-ink: #2f49d6; /* Akzent als Schrift auf hellem Grund, 5,9:1 */
-  --accent-soft: #e9edff;
-  --on-accent: #ffffff;
+  --bg: #f4f1ea;
+  --card: #fffdf8;
+  --text: #14110f;
+  --muted: #665f55; /* 5,3:1 auf --bg */
+  --line: rgba(20, 17, 15, 0.18);
+  --fill: rgba(20, 17, 15, 0.07); /* graue Flächen: Eingabefelder, zweite Buttons */
+  --edge: #14110f; /* Linien um Buttons, Umschalter, Reiter */
+  --ink: #14110f;
+  --sel-bg: #14110f; /* gewählter Umschalter */
+  --sel-fg: #fffdf8;
+  --accent: #ff5b14; /* Geld */
+  --accent-ink: #b93a05; /* Akzent als Schrift auf hellem Grund, 5,2:1 */
+  --accent-soft: #ffe2d2;
+  --on-accent: #14110f; /* dunkle Schrift auf Orange, 5,7:1 */
   --danger: #d1344b;
   --danger-ink: #b3263c;
   --danger-soft: rgba(209, 52, 75, 0.1);
-  --good: #1f9d6b;
+  --good: #1e9e6a;
   --neutral: #8a93a3;
-  --radius: 22px;
-  --shadow: 0 1px 2px rgba(20, 23, 28, 0.06);
+  --paper: #fbf8f1; /* Bon-Papier, in beiden Modi hell */
+  --paper-ink: #14110f;
+  --radius: 18px;
+  --shadow: none;
+  --font-num: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   font-family: system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
   color-scheme: light dark;
 }
+:root[data-metric='time'] { --accent: #2b4bff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; --on-accent: #ffffff; }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b0c10;
-    --card: #17191f;
-    --text: #f2f4f8;
-    --muted: #9aa3b2;
-    --line: rgba(190, 198, 215, 0.16);
-    --fill: rgba(150, 156, 175, 0.2);
-    --accent: #7b92ff;
-    --accent-ink: #9aabff;
-    --accent-soft: #232a4a;
-    --on-accent: #0b0c10;
+    --bg: #0e0d0c;
+    --card: #1b1917;
+    --text: #f4f1ea;
+    --muted: #a39b90;
+    --line: rgba(244, 241, 234, 0.2);
+    --fill: rgba(244, 241, 234, 0.1);
+    --edge: rgba(244, 241, 234, 0.55);
+    --ink: #000000;
+    --sel-bg: #f4f1ea;
+    --sel-fg: #0e0d0c;
+    --accent: #ff7a3d;
+    --accent-ink: #ff9a66;
+    --accent-soft: rgba(255, 122, 61, 0.2);
+    --on-accent: #14110f;
     --danger: #ff6b81;
     --danger-ink: #ff8294;
     --danger-soft: rgba(255, 107, 129, 0.16);
     --good: #4cd6a0;
     --neutral: #9aa3b2;
-    --shadow: none;
   }
+  :root[data-metric='time'] { --accent: #7088ff; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); --on-accent: #0e0d0c; }
 }
 
 * { box-sizing: border-box; }
@@ -305,100 +319,75 @@ select:disabled { opacity: 0.5; }
 .more .disclosure { min-height: 48px; }
 .link.done { font-size: 0.85rem; }
 
-/* ===== Design-Vorschau: Looks umschaltbar im Reiter "Daten" ===== */
-:root { --font-num: system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; --ink: #14171c; }
+/* ===== Kassenbon: Formen ===== */
 .total, .big, .mid, .timer { font-family: var(--font-num); }
+.total { letter-spacing: -0.04em; }
+.btn { border: 2px solid var(--edge); border-radius: 14px; box-shadow: 0 3px 0 var(--edge); }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--edge); opacity: 1; }
+.btn.primary { border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.btn.primary:active { box-shadow: 0 1px 0 var(--ink); }
+.btn.ghost, .btn.danger { background: var(--card); }
+.btn:disabled { box-shadow: none; }
+.card, .list { border: 1.5px solid var(--line); }
+.list > li + li { border-top: 1.5px dashed var(--line); }
+.detail-list { border: 0; background: transparent; border-top: 2px solid var(--edge); border-bottom: 2px solid var(--edge); border-radius: 0; }
+.detail-list > li + li { border-top: 1.5px dashed var(--line); }
+.cost, .detail-list strong, .legend strong { font-family: var(--font-mono); font-weight: 700; }
+.segment { background: transparent; border: 2px solid var(--edge); border-radius: 14px; }
+.segment button { border-radius: 10px; }
+.segment button.on { background: var(--sel-bg); color: var(--sel-fg); box-shadow: none; }
+.chip { border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
+.chip.on { box-shadow: inset 0 0 0 2px var(--ink); background: var(--accent); color: var(--on-accent); }
+.chip.team { box-shadow: inset 0 0 0 1.5px var(--edge); }
+.metric-switch { background: transparent; border: 2px solid var(--edge); }
+.metric-switch .thumb { background: var(--accent); box-shadow: none; }
+.metric-switch .ico { color: var(--muted); }
+.metric-switch:not(.time) .ico:first-of-type, .metric-switch.time .ico:last-of-type { color: var(--on-accent); }
+.topnav { border-bottom: 2px solid var(--edge); }
+.topnav button.on { border-bottom-color: var(--accent); color: var(--text); }
+.rate-btn { border-radius: 14px; border: 2px solid var(--line); background: transparent; }
+.rate-btn.on { background: var(--card); box-shadow: 0 3px 0 var(--edge); }
+.sheet { border-radius: 26px 26px 0 0; border-top: 2px solid var(--edge); }
+.bar i { background: var(--accent); }
+.stack-bar { border: 1.5px solid var(--edge); background: var(--card); }
+.icon-btn.on { background: var(--accent-soft); color: var(--accent-ink); }
+.pick-row.on .box { color: var(--on-accent); }
+.rank { background: var(--accent-soft); color: var(--accent-ink); }
 
-.theme-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.theme-opt { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 6px 12px; border-radius: 16px; border: 2px solid transparent; background: var(--fill); font-weight: 600; font-size: 0.85rem; }
-.theme-opt.on { border-color: var(--accent); background: var(--card); }
-.theme-opt:active { opacity: 0.7; }
-.swatch { display: flex; width: 100%; height: 38px; border-radius: 10px; overflow: hidden; }
-.swatch i { flex: 1; }
-.swatch-standard i:nth-child(1) { background: #f2f3f7; } .swatch-standard i:nth-child(2) { background: #3b5bfd; } .swatch-standard i:nth-child(3) { background: #14171c; }
-.swatch-bon i:nth-child(1) { background: #f4f1ea; } .swatch-bon i:nth-child(2) { background: #ff5b14; } .swatch-bon i:nth-child(3) { background: #14110f; }
-.swatch-klipy i:nth-child(1) { background: #141418; } .swatch-klipy i:nth-child(2) { background: #8800ff; } .swatch-klipy i:nth-child(3) { background: #ffd60a; }
+/* ===== Bewegung (aus bei "Bewegung reduzieren") ===== */
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.4) rotate(-8deg); } 100% { transform: scale(1); } }
+.rate-btn.on .rating-icon { animation: pop 0.4s ease; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.meeting-list > li { animation: rise 0.35s ease both; }
 
-/* --- Kassenbon: Papier und Tinte, Orange = Geld, Blau = Zeit, gepunktete Bon-Linien --- */
-html[data-theme='bon'] {
-  --bg: #f4f1ea; --card: #fffdf8; --text: #14110f; --muted: #665f55;
-  --line: rgba(20, 17, 15, 0.18); --fill: rgba(20, 17, 15, 0.07);
-  --accent: #ff5b14; --on-accent: #14110f; --accent-ink: #b93a05; --accent-soft: #ffe2d2;
-  --danger: #d1344b; --danger-ink: #b3263c; --danger-soft: rgba(209, 52, 75, 0.1); --good: #1e9e6a;
-  --ink: #14110f; --radius: 18px; --shadow: none;
-  --font-num: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-}
-html[data-theme='bon'][data-metric='time'] { --accent: #2b4bff; --on-accent: #ffffff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; }
-@media (prefers-color-scheme: dark) {
-  html[data-theme='bon'] {
-    --bg: #0e0d0c; --card: #1b1917; --text: #f4f1ea; --muted: #a39b90;
-    --line: rgba(244, 241, 234, 0.2); --fill: rgba(244, 241, 234, 0.1);
-    --accent: #ff7a3d; --on-accent: #14110f; --accent-ink: #ff9a66; --accent-soft: rgba(255, 122, 61, 0.2);
-    --danger: #ff6b81; --danger-ink: #ff8294; --danger-soft: rgba(255, 107, 129, 0.16); --good: #4cd6a0;
-    --ink: #000000;
-  }
-  html[data-theme='bon'][data-metric='time'] { --accent: #7088ff; --on-accent: #0e0d0c; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); }
-}
-html[data-theme='bon'] .total { letter-spacing: -0.04em; }
-html[data-theme='bon'] .btn { border: 2px solid var(--ink); border-radius: 14px; box-shadow: 0 3px 0 var(--ink); }
-html[data-theme='bon'] .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); opacity: 1; }
-html[data-theme='bon'] .btn.ghost { background: var(--card); color: var(--text); }
-html[data-theme='bon'] .btn.danger { background: var(--card); }
-html[data-theme='bon'] .btn:disabled { box-shadow: none; }
-html[data-theme='bon'] .card, html[data-theme='bon'] .list { border: 1.5px solid var(--line); }
-html[data-theme='bon'] .list > li + li { border-top: 1.5px dashed var(--line); }
-html[data-theme='bon'] .detail-list { border: 0; background: transparent; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); border-radius: 0; }
-html[data-theme='bon'] .detail-list > li + li { border-top: 1.5px dashed var(--line); }
-html[data-theme='bon'] .cost, html[data-theme='bon'] .detail-list strong, html[data-theme='bon'] .legend strong { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-weight: 700; }
-html[data-theme='bon'] .segment { background: transparent; border: 2px solid var(--ink); border-radius: 14px; }
-html[data-theme='bon'] .segment button { border-radius: 10px; }
-html[data-theme='bon'] .segment button.on { background: var(--ink); color: var(--card); box-shadow: none; }
-html[data-theme='bon'] .chip { border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
-html[data-theme='bon'] .chip.on { box-shadow: inset 0 0 0 2px var(--ink); background: var(--accent); color: var(--on-accent); }
-html[data-theme='bon'] .metric-switch { background: transparent; border: 2px solid var(--ink); }
-html[data-theme='bon'] .metric-switch .thumb { background: var(--accent); box-shadow: none; }
-html[data-theme='bon'] .metric-switch .ico, html[data-theme='bon'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='bon'] .metric-switch.time .ico:last-of-type { color: var(--muted); }
-html[data-theme='bon'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='bon'] .metric-switch.time .ico:last-of-type { color: var(--on-accent); }
-html[data-theme='bon'] .topnav { border-bottom: 2px solid var(--ink); }
-html[data-theme='bon'] .topnav button.on { border-bottom-color: var(--accent); color: var(--text); }
-html[data-theme='bon'] .rate-btn { border-radius: 14px; border: 2px solid var(--line); background: transparent; }
-html[data-theme='bon'] .rate-btn.on { background: var(--card); box-shadow: 0 3px 0 var(--ink); }
-html[data-theme='bon'] .sheet { border-radius: 26px 26px 0 0; border-top: 2px solid var(--ink); }
-html[data-theme='bon'] .bar i { background: var(--accent); }
-html[data-theme='bon'] .stack-bar { border: 1.5px solid var(--ink); background: var(--card); }
-html[data-theme='bon'] .theme-opt.on { border-color: var(--ink); }
+/* ===== Live-Meeting: Zeit und Stopp nebeneinander ===== */
+.live-top, .live-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; }
+.live-main > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.actions > .live { min-width: 0; }
+.live .timer { font-size: clamp(2rem, 10.5vw, 2.8rem); white-space: nowrap; }
+.live .stop { flex: none; min-width: 112px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.icon-btn.trash { width: 44px; height: 44px; color: var(--danger-ink); background: var(--danger-soft); }
 
-/* --- Klipy-Stil: dunkel, knallig, dicke Schrift, 3D-Buttons --- */
-html[data-theme='klipy'] {
-  color-scheme: dark;
-  --bg: #141418; --card: #212127; --text: #ffffff; --muted: #b9b9c6;
-  --line: rgba(255, 255, 255, 0.16); --fill: rgba(255, 255, 255, 0.1);
-  --accent: #8800ff; --on-accent: #ffffff; --accent-ink: #c4a0ff; --accent-soft: rgba(136, 0, 255, 0.3);
-  --hot: #ffd60a;
-  --danger: #ff5252; --danger-ink: #ff8a8a; --danger-soft: rgba(255, 82, 82, 0.18);
-  --good: #3ddc84; --neutral: #b9b9c6; --ink: #000000; --radius: 22px; --shadow: none;
-  --font-num: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+/* ===== Bon nach dem Meeting ===== */
+.bon-wrap { display: flex; justify-content: center; padding: 6px 0 10px; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28)); }
+.bon {
+  position: relative; width: min(100%, 340px); padding: 26px 20px 30px; background: var(--paper); color: var(--paper-ink);
+  font-family: var(--font-mono); font-size: 0.86rem; line-height: 1.45;
+  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 14px 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 14px 51% repeat-x;
+  mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 14px 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 14px 51% repeat-x;
+  animation: print 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-html[data-theme='klipy'] body, html[data-theme='klipy'] button, html[data-theme='klipy'] input, html[data-theme='klipy'] select { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }
-html[data-theme='klipy'] .total, html[data-theme='klipy'] .big, html[data-theme='klipy'] .timer, html[data-theme='klipy'] .mid:not(.bad) { color: var(--hot); font-weight: 700; }
-html[data-theme='klipy'] .btn { border-radius: 16px; font-weight: 700; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.6); }
-html[data-theme='klipy'] .btn.primary { box-shadow: 0 4px 0 #4b0099; }
-html[data-theme='klipy'] .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); opacity: 1; }
-html[data-theme='klipy'] .btn.primary:active { box-shadow: 0 1px 0 #4b0099; }
-html[data-theme='klipy'] .card, html[data-theme='klipy'] .list { border: 2px solid rgba(255, 255, 255, 0.08); }
-html[data-theme='klipy'] .segment { border-radius: 16px; }
-html[data-theme='klipy'] .segment button { border-radius: 12px; font-weight: 700; }
-html[data-theme='klipy'] .segment button.on { background: var(--accent); color: #ffffff; box-shadow: 0 2px 0 #4b0099; }
-html[data-theme='klipy'] .chip { font-weight: 600; }
-html[data-theme='klipy'] .chip.on { background: var(--accent); color: #ffffff; }
-html[data-theme='klipy'] .topnav button { font-weight: 700; }
-html[data-theme='klipy'] .topnav button.on { color: var(--hot); border-bottom-color: var(--hot); }
-html[data-theme='klipy'] .metric-switch .thumb { background: var(--hot); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
-html[data-theme='klipy'] .metric-switch:not(.time) .ico:first-of-type, html[data-theme='klipy'] .metric-switch.time .ico:last-of-type { color: #141418; }
-html[data-theme='klipy'] .bar i { background: var(--hot); }
-html[data-theme='klipy'] .rank { background: var(--hot); color: #141418; }
-html[data-theme='klipy'] .pill, html[data-theme='klipy'] .badge { font-weight: 700; }
-html[data-theme='klipy'] .rate-btn { border-radius: 18px; font-weight: 700; }
-html[data-theme='klipy'] .sheet { border-radius: 30px 30px 0 0; border-top: 2px solid rgba(255, 255, 255, 0.12); }
-html[data-theme='klipy'] .theme-opt.on { border-color: var(--hot); }
-html[data-theme='klipy'] .icon-btn.on { background: var(--accent); color: #ffffff; }
+@keyframes print { from { clip-path: inset(0 0 100% 0); transform: translateY(-16px); } to { clip-path: inset(0 0 0 0); transform: none; } }
+.bon h3 { margin: 0; text-align: center; font-size: 1.05rem; letter-spacing: 0.22em; color: var(--paper-ink); text-transform: none; }
+.bon .center { text-align: center; opacity: 0.7; font-size: 0.78rem; }
+.bon hr { border: 0; border-top: 1.5px dashed currentColor; opacity: 0.45; margin: 12px 0; }
+.bon .b-row { display: flex; justify-content: space-between; gap: 12px; }
+.bon .b-head { position: relative; min-height: 3.8rem; margin-bottom: 4px; }
+.bon .b-title { font-size: 1.05rem; font-weight: 700; max-width: calc(100% - 128px); word-break: break-word; }
+.bon .b-sum { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bon .b-sum strong { font-family: var(--font-num); font-size: 2rem; letter-spacing: -0.03em; }
+.bon .barcode { height: 34px; margin-top: 14px; background: repeating-linear-gradient(90deg, #14110f 0 2px, transparent 2px 5px, #14110f 5px 6px, transparent 6px 8px, #14110f 8px 11px, transparent 11px 13px); }
+.bon .thanks { margin-top: 8px; text-align: center; font-size: 0.74rem; opacity: 0.75; }
+.stamp { position: absolute; right: -2px; top: -2px; transform: rotate(-9deg); padding: 4px 10px; border: 3px double #d1450a; border-radius: 6px; color: #d1450a; font-weight: 700; letter-spacing: 0.12em; text-align: center; line-height: 1.2; background: rgba(251, 248, 241, 0.6); animation: stamp 0.35s 1.1s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.stamp small { display: block; font-size: 0.72rem; letter-spacing: 0.06em; }
+@keyframes stamp { from { transform: rotate(-9deg) scale(2.4); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: 0.92; } }
