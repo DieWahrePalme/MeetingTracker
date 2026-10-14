@@ -5,6 +5,7 @@ import { centsToInput, formatEuro, formatHours, parseEuroToCents } from '../lib/
 import { NOMINAL_HOURS, PRODUCTIVE_HOURS, suggestedRateCents } from '../lib/salary'
 import { personScores } from '../lib/stats'
 import { t } from '../texts'
+import { RatingIcon } from './Rating'
 import { Sheet } from './Sheet'
 
 function PersonForm({ person, onClose }: { person?: Person; onClose: () => void }) {
@@ -204,6 +205,11 @@ export function People() {
                     <strong>{formatEuro(s.cents)}</strong>
                   </div>
                   <small className="muted">{t.people.stats(s.meetings, formatHours(s.seconds))}</small>
+                  {(s.up > 0 || s.down > 0) && (
+                    <small className="muted rated-line">
+                      <RatingIcon rating="up" size={14} /> {s.up} <RatingIcon rating="down" size={14} /> {s.down}
+                    </small>
+                  )}
                   <span className="bar"><i style={{ width: `${(s.seconds / maxSec) * 100}%` }} /></span>
                 </div>
               </li>

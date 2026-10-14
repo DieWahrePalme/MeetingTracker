@@ -27,6 +27,31 @@ only cost tracking. Idea from Moritz (2026-10-13).
 - "Meeting score" per person: who spends the most time in meetings, how many
   meetings, total hours, total cost caused. Ranking, simple bars.
 
+## Meetings bewerten (Wunsch von Moritz, 2026-10-14)
+Jedes Meeting kann optional bewertet werden: Daumen hoch (gut), neutral, Daumen runter (schlecht).
+- Drei große Buttons mit eigenen SVG-Icons (keine Emojis), nochmal tippen entfernt die Bewertung.
+  Zu setzen im Live-Timer (vor dem Stoppen), im Nachtragen-Formular, im Detail (speichert sofort) und im Bearbeiten.
+- Liste: kleines Icon pro Meeting, unbewertet zeigt nichts.
+- Startseite: Karte "Davon in schlechten Meetings: X" und ein dünner gestapelter Balken mit der Aufteilung der Kosten
+  nach Bewertung (gut / neutral / schlecht / unbewertet), nur sichtbar, wenn mindestens ein Meeting bewertet ist.
+  Die Karte folgt dem Zeitraumfilter.
+- Filter-Chips (Alle / Gut / Neutral / Schlecht / Unbewertet), kombinierbar mit Jahr/Monat/Tag und der Sortierung.
+- Personenansicht: pro Person Anzahl guter und schlechter Meetings, der Meeting-Score bleibt unverändert.
+- Daten: optionales Feld `rating` ('up' | 'neutral' | 'down') am Meeting. Alte Meetings und Exporte funktionieren weiter.
+
+## Meeting-Pauschale (Wunsch von Moritz, 2026-10-14)
+Für Meetings, bei denen man nicht jeden einzeln anlegen will (z. B. 10 Personen à 30 €/h).
+- Im Formular (Nachtragen, Bearbeiten und Live-Timer) gibt es einen optionalen Block "Pauschale":
+  Anzahl Personen und Stundensatz pro Person. Benannte Personen und Pauschale lassen sich mischen
+  (z. B. 2 benannte + 8 Pauschale) oder die Pauschale steht allein.
+- Kosten der Pauschale = Anzahl x Satz x Sekunden / 3600, einmal auf ganze Cent gerundet.
+  Meetingkosten = benannte Personen + Pauschale.
+- Gespeichert wird `group: { count, rateCents }` im Meeting (optionales Feld, Schema bleibt Version 1).
+  Alte Meetings und alte Exporte funktionieren unverändert.
+- Live-Timer: Pauschale vor oder während des Laufs änderbar, es zählen die Werte beim Stoppen.
+- Detail: Zeile "8 weitere Teilnehmer × 30,00 €/h" mit Kosten. Liste: Personenzahl inkl. Pauschale.
+- Statistik: Die Pauschale zählt in Gesamt-, Monats- und Jahressummen, aber nicht im Meeting-Score (anonym).
+
 ## Gehaltsrechner im Personenformular (Wunsch von Moritz, 2026-10-13)
 Optional neben dem Stundensatz: "Aus Jahresgehalt berechnen". Jahresbrutto eingeben,
 der Stundensatz wird vorgeschlagen und bleibt von Hand änderbar. Gespeichert wird

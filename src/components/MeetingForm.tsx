@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { actions, useData } from '../data/store'
-import type { Meeting } from '../data/types'
+import type { Meeting, Rating } from '../data/types'
 import { t } from '../texts'
+import { GroupFields, groupError, groupToInput, inputToGroup } from './GroupFields'
+import { RatingPicker } from './Rating'
 import { Sheet } from './Sheet'
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -20,6 +22,8 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
   const [m, setM] = useState(String(Math.floor((dur % 3600) / 60)))
   const [s, setS] = useState(String(dur % 60))
   const [ids, setIds] = useState<string[]>(meeting?.participants.map((p) => p.personId) ?? [])
+  const [group, setGroup] = useState(groupToInput(meeting?.group))
+  const [rating, setRating] = useState<Rating | undefined>(meeting?.rating)
 
   // Auch gelöschte Personen aus dem Meeting bleiben wählbar.
   const options = [
@@ -28,7 +32,9 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
   ]
 
   const durationSec = (Number(h) || 0) * 3600 + (Number(m) || 0) * 60 + (Number(s) || 0)
-  const error = durationSec <= 0 ? t.form.errDuration : ids.length === 0 ? t.form.errPeople : ''
+  const flat = inputToGroup(group)
+  const error =
+    durationSec <= 0 ? t.form.errDuration : groupError(group) || (ids.length === 0 && !flat ? t.form.errPeople : '')
 
   function save() {
     if (error) return
@@ -37,7 +43,7 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
       const [y, mo, d] = date.split('-').map(Number)
       startedAt = new Date(y, mo - 1, d, 12).getTime()
     }
-    actions.saveMeeting({ id: meeting?.id, title: title.trim() || 'Meeting', startedAt, durationSec, personIds: ids })
+    actions.saveMeeting({ id: meeting?.id, title: title.trim() || 'Meeting', startedAt, durationSec, personIds: ids, group: flat, rating })
     onClose()
   }
 
@@ -82,6 +88,8 @@ export function MeetingForm({ meeting, onClose }: { meeting?: Meeting; onClose: 
           </div>
         )}
       </div>
+      <GroupFields value={group} onChange={setGroup} />
+      <RatingPicker value={rating} onChange={setRating} />
       {error && <p className="error">{error}</p>}
       <div className="row">
         <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>

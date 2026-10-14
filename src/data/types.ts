@@ -11,18 +11,30 @@ export interface Participant {
   rateCents: number
 }
 
+export type Rating = 'up' | 'neutral' | 'down'
+
+/** Pauschale für anonyme Teilnehmer: Anzahl und Stundensatz pro Person (Cent), im Meeting gespeichert. */
+export interface FlatGroup {
+  count: number
+  rateCents: number
+}
+
 export interface Meeting {
   id: string
   title: string
   startedAt: number // ms seit 1970
   durationSec: number
   participants: Participant[]
+  group?: FlatGroup
+  rating?: Rating // optional: Daumen hoch / neutral / Daumen runter
 }
 
 export interface LiveMeeting {
   title: string
   startedAt: number
   personIds: string[]
+  group?: FlatGroup
+  rating?: Rating
 }
 
 export interface AppData {

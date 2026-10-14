@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useData } from '../data/store'
 import type { Meeting } from '../data/types'
 import { formatDuration, formatEuro } from '../lib/money'
-import { matches, meetingCost, noFilter, totalCost } from '../lib/stats'
-import type { Filter } from '../lib/stats'
+import { costByRating, headCount, matches, matchesRating, meetingCost, noFilter, totalCost } from '../lib/stats'
+import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
 import { LiveCard } from './LiveCard'
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingForm } from './MeetingForm'
+import { RatingIcon } from './Rating'
 
 const num = (v: string) => (v === '' ? null : Number(v))
 
@@ -15,15 +16,21 @@ export function Meetings() {
   const { meetings } = useData()
   const [filter, setFilter] = useState<Filter>(noFilter)
   const [sort, setSort] = useState<'newest' | 'expensive'>('newest')
+  const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
 
-  const filtered = meetings.filter((m) => matches(m, filter))
+  const inPeriod = meetings.filter((m) => matches(m, filter))
+  const filtered = inPeriod.filter((m) => matchesRating(m, ratingFilter))
+  const split = costByRating(inPeriod)
+  const splitTotal = totalCost(inPeriod)
+  const anyRated = inPeriod.some((m) => m.rating)
   const list: Meeting[] = [...filtered].sort((a, b) =>
     sort === 'newest' ? b.startedAt - a.startedAt : meetingCost(b) - meetingCost(a),
   )
   const max = Math.max(1, ...list.map(meetingCost))
-  const active = filter.year !== null || filter.month !== null || filter.day !== null
+  const periodActive = filter.year !== null || filter.month !== null || filter.day !== null
+  const active = periodActive || ratingFilter !== null
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
   const open = meetings.find((m) => m.id === openId)
 
@@ -61,16 +68,62 @@ export function Meetings() {
             </select>
           </label>
         </div>
+        <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
+          {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
+            <button
+              key={k ?? 'all'}
+              className={'chip' + (ratingFilter === k ? ' on' : '')}
+              aria-pressed={ratingFilter === k}
+              onClick={() => setRatingFilter(k)}
+            >
+              {k && k !== 'none' && <RatingIcon rating={k} size={16} />}
+              {k === null ? t.rating.all : t.rating[k]}
+            </button>
+          ))}
+        </div>
         {active && (
           <div className="line result">
             <div>
               <small className="muted">{t.filter.result}</small>
               <strong className="mid">{formatEuro(totalCost(filtered))}</strong>
             </div>
-            <button className="link" onClick={() => setFilter(noFilter)}>{t.filter.reset}</button>
+            <button
+              className="link"
+              onClick={() => {
+                setFilter(noFilter)
+                setRatingFilter(null)
+              }}
+            >
+              {t.filter.reset}
+            </button>
           </div>
         )}
       </section>
+
+      {anyRated && (
+        <section className="card split">
+          <div className="line">
+            <div>
+              <small className="muted">{t.rating.badCost}</small>
+              <strong className="mid bad">{formatEuro(split.down.cents)}</strong>
+            </div>
+          </div>
+          <div className="stack-bar" role="img" aria-label={t.rating.split}>
+            {(['up', 'neutral', 'down', 'none'] as RatingKey[]).map((k) =>
+              split[k].cents > 0 ? <i key={k} className={`seg seg-${k}`} style={{ flexGrow: split[k].cents }} /> : null,
+            )}
+          </div>
+          <ul className="plain legend">
+            {(['up', 'neutral', 'down', 'none'] as RatingKey[]).map((k) => (
+              <li key={k}>
+                <i className={`dot seg-${k}`} />
+                <span>{t.rating[k]}</span>
+                <strong>{splitTotal > 0 ? Math.round((split[k].cents / splitTotal) * 100) : 0} %</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="segment" role="group">
         {(['newest', 'expensive'] as const).map((k) => (
@@ -88,9 +141,12 @@ export function Meetings() {
             <li key={m.id}>
               <button className="row-item" onClick={() => setOpenId(m.id)}>
                 <div className="grow">
-                  <strong>{m.title}</strong>
+                  <strong className="title">
+                    {m.title}
+                    {m.rating && <RatingIcon rating={m.rating} size={16} label />}
+                  </strong>
                   <small className="muted">
-                    {new Date(m.startedAt).toLocaleDateString('de-DE')} · {formatDuration(m.durationSec)} · {t.list.people(m.participants.length)}
+                    {new Date(m.startedAt).toLocaleDateString('de-DE')} · {formatDuration(m.durationSec)} · {t.list.people(headCount(m))}
                   </small>
                   <span className="bar"><i style={{ width: `${(meetingCost(m) / max) * 100}%` }} /></span>
                 </div>
