@@ -2,14 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { t } from '../texts'
 
+const TEXT_TYPES = ['text', 'search', 'number', 'email', 'tel', 'url', 'password']
+const isTextField = (el: Element | null) =>
+  (el instanceof HTMLInputElement && TEXT_TYPES.includes(el.type)) || el instanceof HTMLTextAreaElement
+
 /**
  * Fenster von unten (Griff, Titel, Schließen oben). Der Inhalt scrollt, die Buttons (`actions`)
  * bleiben unten sichtbar. Solange es offen ist, scrollt die Seite dahinter nicht mit.
- * Wenn die Bildschirmtastatur aufgeht (iPhone), richtet es sich nach dem sichtbaren Bereich
- * aus, damit Felder und Buttons nicht verdeckt werden.
+ *
+ * Tastatur (iPhone): Nur solange ein Textfeld im Fenster aktiv ist, richtet sich das Fenster nach dem
+ * sichtbaren Bereich über der Tastatur und wird kompakt (ohne Buttons unten). Ohne aktives Textfeld
+ * ist es immer voll hoch, so kann ein veralteter Wert von Safari nichts verstellen.
  */
 export function Sheet({ title, onClose, children, actions }: { title: string; onClose: () => void; children: ReactNode; actions?: ReactNode }) {
-  const [view, setView] = useState<{ top: number; height: number; keyboard: boolean } | null>(null)
+  const [typing, setTyping] = useState(false)
+  const [vp, setVp] = useState<{ top: number; height: number } | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -22,15 +29,17 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
     return () => document.documentElement.classList.remove('sheet-open')
   }, [])
 
+  // Sichtbaren Bereich nur beobachten, solange getippt wird. Safari meldet Änderungen nicht immer
+  // per Ereignis, darum zusätzlich alle 300 ms nachsehen.
   useEffect(() => {
     const v = window.visualViewport
-    if (!v) return
-    // Der sichtbare Bereich ändert sich mit der Tastatur. Safari meldet das Ende nicht immer per Ereignis,
-    // darum zusätzlich alle 300 ms nachsehen (setzt nur neu, wenn sich etwas geändert hat).
+    if (!typing || !v) {
+      setVp(null)
+      return
+    }
     const update = () =>
-      setView((prev) => {
-        const height = Math.min(v.height, window.innerHeight) // nie größer als der Bildschirm
-        const next = { top: v.offsetTop, height, keyboard: window.innerHeight - height > 120 }
+      setVp((prev) => {
+        const next = { top: v.offsetTop, height: Math.min(v.height, window.innerHeight) }
         return prev && prev.top === next.top && prev.height === next.height ? prev : next
       })
     update()
@@ -42,19 +51,21 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
       v.removeEventListener('scroll', update)
       clearInterval(id)
     }
-  }, [])
+  }, [typing])
 
-  // Nach oben/unten wischen im Fenster schließt die Tastatur (statt daneben tippen zu müssen).
-  const touchY = useRef(0)
+  const keyboard = typing && vp !== null && window.innerHeight - vp.height > 120
+
+  // Nach oben/unten wischen schließt die Tastatur, außer in der Trefferliste (dort wird gescrollt).
+  const touch = useRef({ y: 0, inList: false })
   const dismissKeyboardOnScroll = (e: React.TouchEvent) => {
     const a = document.activeElement
-    if (a instanceof HTMLInputElement && Math.abs(e.touches[0].clientY - touchY.current) > 14) a.blur()
+    if (!touch.current.inList && isTextField(a) && Math.abs(e.touches[0].clientY - touch.current.y) > 14) (a as HTMLElement).blur()
   }
 
   return (
     <div
-      className={'overlay' + (view?.keyboard ? ' kb' : '')}
-      style={view ? { top: view.top, height: view.height, bottom: 'auto' } : undefined}
+      className={'overlay' + (keyboard ? ' kb' : '')}
+      style={keyboard && vp ? { top: vp.top, height: vp.height, bottom: 'auto' } : undefined}
       onClick={onClose}
     >
       <div
@@ -64,10 +75,14 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
         onFocus={(e) => {
-          // Angetipptes Feld in die Mitte des sichtbaren Bereichs holen (nach dem Aufgehen der Tastatur)
           const el = e.target as HTMLElement
-          if (el.matches('input, select, textarea')) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 320)
+          if (!isTextField(el) && !el.matches('select')) return
+          setTyping(isTextField(el))
+          // Angetipptes Feld nach dem Aufgehen der Tastatur ins Bild holen (Suche: ganz nach oben)
+          const block = el.dataset.scroll === 'start' ? 'start' : 'center'
+          setTimeout(() => el.scrollIntoView({ block, behavior: 'smooth' }), 320)
         }}
+        onBlur={() => setTimeout(() => setTyping(isTextField(document.activeElement)), 60)}
       >
         <div className="grabber" aria-hidden="true" />
         <div className="sheet-head">
@@ -78,7 +93,11 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
             </svg>
           </button>
         </div>
-        <div className="sheet-body" onTouchStart={(e) => (touchY.current = e.touches[0].clientY)} onTouchMove={dismissKeyboardOnScroll}>
+        <div
+          className="sheet-body"
+          onTouchStart={(e) => (touch.current = { y: e.touches[0].clientY, inList: !!(e.target as HTMLElement).closest('.pick-list, .chips.picked') })}
+          onTouchMove={dismissKeyboardOnScroll}
+        >
           {children}
         </div>
         {actions && <div className="sheet-actions">{actions}</div>}

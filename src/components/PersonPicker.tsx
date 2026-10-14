@@ -24,6 +24,15 @@ export function PersonPicker({
   const searchRef = useRef<HTMLInputElement>(null)
   const toggle = (id: string) => onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
 
+  // Beim Antippen von Personen, Chips und Links bleibt der Cursor im Suchfeld (Tastatur bleibt offen),
+  // so lassen sich schnell mehrere Personen hintereinander wählen.
+  const keepFocus = { onMouseDown: (e: React.MouseEvent) => e.preventDefault() }
+  const act = (fn: () => void) => () => {
+    const had = document.activeElement === searchRef.current
+    fn()
+    if (had) searchRef.current?.focus({ preventScroll: true })
+  }
+
   // Teams: nur Mitglieder, die gerade wählbar sind (nicht archiviert, nicht gelöscht)
   const available = new Set(options.map((o) => o.id))
   const teamChips = teams
@@ -41,7 +50,8 @@ export function PersonPicker({
               type="button"
               className={'chip team' + (on ? ' on' : '')}
               aria-pressed={on}
-              onClick={() => onChange(on ? selected.filter((id) => !members.includes(id)) : [...new Set([...selected, ...members])])}
+              {...keepFocus}
+              onClick={act(() => onChange(on ? selected.filter((id) => !members.includes(id)) : [...new Set([...selected, ...members])]))}
             >
               {tm.name} ({members.length})
             </button>
@@ -76,6 +86,7 @@ export function PersonPicker({
       {teamRow}
       <input
         ref={searchRef}
+        data-scroll="start"
         type="search"
         className="input"
         value={query}
@@ -101,7 +112,7 @@ export function PersonPicker({
         <span>{t.pick.selected(chosen.length)}</span>
         <span className="picker-actions">
           {focused && (
-            <button type="button" className="link done" onClick={() => searchRef.current?.blur()}>
+            <button type="button" className="link done" {...keepFocus} onClick={() => searchRef.current?.blur()}>
               {t.pick.done}
             </button>
           )}
@@ -109,13 +120,14 @@ export function PersonPicker({
             <button
               type="button"
               className="link"
-              onClick={() => onChange(allShownSelected ? selected.filter((id) => !matches.some((o) => o.id === id)) : [...new Set([...selected, ...matches.map((o) => o.id)])])}
+              {...keepFocus}
+              onClick={act(() => onChange(allShownSelected ? selected.filter((id) => !matches.some((o) => o.id === id)) : [...new Set([...selected, ...matches.map((o) => o.id)])]))}
             >
               {allShownSelected ? t.pick.unselectShown(matches.length) : t.pick.selectShown(matches.length)}
             </button>
           )}
           {chosen.length > 0 && (
-            <button type="button" className="link" onClick={() => onChange([])}>
+            <button type="button" className="link" {...keepFocus} onClick={act(() => onChange([]))}>
               {t.pick.clear}
             </button>
           )}
@@ -124,7 +136,7 @@ export function PersonPicker({
       {chosen.length > 0 && (
         <div className="chips picked">
           {chosen.map((o) => (
-            <button key={o.id} type="button" className="chip on" aria-label={t.pick.remove(o.name)} onClick={() => toggle(o.id)}>
+            <button key={o.id} type="button" className="chip on" aria-label={t.pick.remove(o.name)} {...keepFocus} onClick={act(() => toggle(o.id))}>
               {o.name} <span aria-hidden="true">×</span>
             </button>
           ))}
@@ -136,7 +148,7 @@ export function PersonPicker({
           const on = selected.includes(o.id)
           return (
             <li key={o.id}>
-              <button type="button" className={'pick-row' + (on ? ' on' : '')} aria-pressed={on} onClick={() => toggle(o.id)}>
+              <button type="button" className={'pick-row' + (on ? ' on' : '')} aria-pressed={on} {...keepFocus} onClick={act(() => toggle(o.id))}>
                 <span className="box" aria-hidden="true">{on ? '✓' : ''}</span>
                 {o.name}
               </button>

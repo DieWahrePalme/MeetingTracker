@@ -112,8 +112,8 @@ Rein visuell, keine Logik. Getestet auf iPhone-Format mit 50 Personen, hell und 
 - Fenster (Sheets): Griff, Titel, Schließen oben (X), Buttons fest unten, Seite dahinter ist gesperrt (kein Durchscrollen).
 - Startseite: Gesamtkosten, dann "Meeting starten" und "Meeting nachtragen" zusammen, Bewertungs-Aufteilung, Suche, Filter eingeklappt (Zähler "n aktiv"), Sortierung, Liste.
 - Reiter oben als Textreiter mit Unterstreichung. `theme-color` für hell und dunkel.
-- Tastatur (iPhone): Fenster richten sich nach dem sichtbaren Bereich (`visualViewport`, zusätzlich alle 300 ms geprüft, weil Safari das Ende nicht immer meldet), das angetippte Feld wird ins Bild gescrollt, Buttons bleiben sichtbar.
-  Tastatur schließen: "Fertig" neben der Personensuche, Enter, oder im Fenster wischen. So muss man nicht daneben tippen und wählt nicht aus Versehen eine Person.
+- Tastatur (iPhone): Tastaturmodus gilt nur, solange ein Textfeld im Fenster aktiv ist (so kann ein veralteter Wert von Safari nichts verstellen). Dann richtet sich das Fenster nach dem sichtbaren Bereich (`visualViewport`, alle 300 ms geprüft) und wird kompakt: kleiner Kopf, Buttons unten ausgeblendet bis "Fertig", gewählte Personen als eine wischbare Reihe, Suche ganz oben. Ohne aktives Textfeld ist das Fenster immer voll hoch.
+  Tastatur schließen: "Fertig" neben der Personensuche, Enter, oder im Fenster wischen (nicht in der Trefferliste). Beim Antippen von Personen, Teams, "Alle wählen" und "Leeren" bleibt der Cursor im Suchfeld, damit man schnell mehrere hintereinander wählen kann (gilt für Meeting und Team).
 - Fenster bewegen sich nie seitlich: Gitter mit `minmax(0, 1fr)`, Felder mit `min-width: 0`, `overflow-x: hidden`, `touch-action: pan-y`.
 - Meeting-Formular minimal: Titel, Datum und Dauer als schlanke Zeilen wie in iOS-Einstellungen, Teilnehmer, und "Pauschale und Bewertung" eingeklappt (zeigt eine Zusammenfassung, öffnet sich von selbst bei vorhandener Pauschale oder Bewertung).
 - Texte: Verben auf Buttons, kurze Hinweise, "Std." bei Zeiten, Reiter "Score" statt "Meeting-Score" (passt in den Umschalter).

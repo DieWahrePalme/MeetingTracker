@@ -205,13 +205,18 @@ select:disabled { opacity: 0.5; }
   .overlay { align-items: center; padding: 24px; }
   .sheet { border-radius: 32px; max-height: 88dvh; }
 }
-/* Tastatur offen: weniger Kopf, damit das Feld und die Buttons Platz haben */
+/* Tastatur offen (nur während ein Textfeld aktiv ist): möglichst viel Platz für Suche und Treffer */
 .overlay.kb { padding-top: 0; }
 .overlay.kb .grabber { display: none; }
-.overlay.kb .sheet { border-radius: 24px 24px 0 0; }
-.overlay.kb .sheet-head { padding-top: 8px; }
-.overlay.kb .sheet-actions { padding-bottom: 12px; }
-.overlay.kb .sheet-body { padding-bottom: 12px; }
+.overlay.kb .sheet { border-radius: 0 0 24px 24px; }
+.overlay.kb .sheet-head { padding: 6px 12px 0 20px; }
+.overlay.kb .sheet-head h2 { font-size: 1.05rem; }
+.overlay.kb .close { width: 40px; height: 40px; }
+.overlay.kb .sheet-actions { display: none; }
+.overlay.kb .sheet-body { padding-bottom: 12px; gap: 12px; }
+.overlay.kb .pick-list { max-height: none; }
+.overlay.kb .chips.picked { flex-wrap: nowrap; overflow-x: auto; max-height: none; scrollbar-width: none; padding-bottom: 2px; }
+.overlay.kb .chips.picked .chip { flex: none; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes up { from { transform: translateY(28px); opacity: 0; } }
 
