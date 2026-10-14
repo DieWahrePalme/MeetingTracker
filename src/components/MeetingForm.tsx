@@ -15,12 +15,12 @@ const toDateStr = (ms: number) => {
 }
 
 /** `meeting` = bearbeiten, `copyFrom` = als Vorlage für ein neues Meeting (Duplizieren). */
-export function MeetingForm({ meeting, copyFrom, onClose }: { meeting?: Meeting; copyFrom?: Meeting; onClose: () => void }) {
+export function MeetingForm({ meeting, copyFrom, startDate, onClose }: { meeting?: Meeting; copyFrom?: Meeting; startDate?: number; onClose: () => void }) {
   const { people, teams, meetings } = useData()
   const src = meeting ?? copyFrom
   const initialDate = toDateStr(meeting?.startedAt ?? Date.now())
   const [title, setTitle] = useState(src?.title ?? '')
-  const [date, setDate] = useState(initialDate)
+  const [date, setDate] = useState(toDateStr(startDate ?? meeting?.startedAt ?? Date.now()))
   const dur = src?.durationSec ?? 1800
   const [h, setH] = useState(String(Math.floor(dur / 3600)))
   const [m, setM] = useState(String(Math.floor((dur % 3600) / 60)))

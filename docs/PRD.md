@@ -37,6 +37,16 @@ Getestet mit 50 Personen auf iPhone-Format (393 x 659).
   gewählte Personen stehen oben als Chips zum Entfernen, "Leeren".
 - Reiter Personen: Umschalter Personen / Meeting-Score, Suche, Meeting-Score zeigt zuerst die Top 10 ("Alle anzeigen").
 
+## Wiederkehrende Meetings vorschlagen (Wunsch von Moritz, 2026-10-14)
+Die App erkennt aus den gespeicherten Meetings, was regelmäßig stattfindet, und schlägt das nächste vor. Es wird nichts extra gespeichert (nur ausgeblendete Vorschläge).
+- **Erkennung** (`src/lib/recurring.ts`): gleicher Titel (ohne Groß/Kleinschreibung), mindestens 3 verschiedene Tage, gleichmäßiger Abstand
+  (jeder Abstand höchstens 25 %, mindestens 1 Tag, neben dem mittleren; Abstand bis 62 Tage). Unbenannte Meetings ("Meeting") zählen nie.
+  Es zählen die letzten 6 Termine.
+- **Anzeige:** Karte "Wiederkehrend" auf der Startseite (max. 3), z. B. "Wochenplanung · jede Woche · zuletzt am 7.10.2026 · heute fällig".
+  Sichtbar ab einen Tag vor der Fälligkeit bis höchstens einen Abstand überfällig.
+- **Anlegen:** Ein Tipp öffnet das Duplizieren-Formular mit Personen, Dauer, Pauschale und Titel des letzten Termins. Datum ist der Fälligkeitstag (bei überfällig) oder heute.
+- **Ausblenden:** Blendet den Vorschlag für diesen Termin aus (`hiddenSuggestions: ["titel|tag"]`, optional). Beim nächsten Termin der Serie erscheint wieder ein Vorschlag.
+
 ## Teams, Archiv, Duplizieren, Suche (Wunsch von Moritz, 2026-10-14)
 - **Teams:** Im Reiter Personen gibt es den Umschalter "Teams". Ein Team hat einen Namen und Mitglieder. In der Meeting-Auswahl
   (Nachtragen, Bearbeiten, Live) wählt ein Tipp auf den Team-Chip alle Mitglieder, ein zweiter Tipp wählt sie wieder ab.

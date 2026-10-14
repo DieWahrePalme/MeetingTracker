@@ -185,3 +185,14 @@ small { font-size: 0.82rem; }
 .chip.team.on { border-style: solid; }
 .row-item.archived { opacity: 0.6; }
 .archive-toggle { align-self: flex-start; padding: 0; }
+
+/* Vorschläge für wiederkehrende Meetings */
+.suggest { gap: 8px; }
+.suggest-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.suggest-item:first-child { border-top: 0; }
+.suggest-item .grow { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.suggest-actions { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.suggest-actions .btn { min-height: 44px; padding: 0 18px; }
+.suggest-actions .link { min-height: 36px; font-size: 0.85rem; color: var(--muted); }
+.pill.due { background: var(--accent-soft); color: var(--accent); }
+.suggest .pill::before { display: none; }

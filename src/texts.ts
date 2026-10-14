@@ -25,6 +25,14 @@ export const t = {
     months: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
   },
   sort: { newest: 'Neueste', expensive: 'Teuerste' },
+  suggest: {
+    title: 'Wiederkehrend',
+    every: (d: number) => (d === 1 ? 'jeden Tag' : d === 7 ? 'jede Woche' : d === 14 ? 'alle 2 Wochen' : `alle ${d} Tage`),
+    last: (date: string) => `zuletzt am ${date}`,
+    due: (n: number) => (n > 0 ? 'morgen fällig' : n === 0 ? 'heute fällig' : n === -1 ? 'seit gestern fällig' : `seit ${-n} Tagen fällig`),
+    create: 'Anlegen',
+    hide: 'Ausblenden',
+  },
   search: { placeholder: 'Meetings suchen (Titel oder Person) …' },
   list: {
     empty: 'Noch keine Meetings. Starte eins oder trage ein vergangenes nach.',

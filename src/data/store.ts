@@ -9,6 +9,7 @@ const emptyData = (): AppData => ({
   companyName: 'Unternehmen A',
   people: [],
   teams: [],
+  hiddenSuggestions: [],
   meetings: [],
   live: null,
 })
@@ -72,7 +73,8 @@ export function parseData(raw: unknown): AppData {
     }
     live = { title: raw.live.title, startedAt: raw.live.startedAt, personIds: raw.live.personIds.filter(isStr), ...(group && { group }), ...(rating && { rating }) }
   }
-  return { version: 1, companyName: raw.companyName, people, teams, meetings, live }
+  const hiddenSuggestions = Array.isArray(raw.hiddenSuggestions) ? raw.hiddenSuggestions.filter(isStr) : []
+  return { version: 1, companyName: raw.companyName, people, teams, hiddenSuggestions, meetings, live }
 }
 
 function load(): AppData {
@@ -146,6 +148,9 @@ export const actions = {
     } else {
       set({ ...state, teams: [...state.teams, { id: uid(), name: tm.name, personIds: tm.personIds }] })
     }
+  },
+  hideSuggestion(id: string) {
+    set({ ...state, hiddenSuggestions: [...state.hiddenSuggestions, id].slice(-200) })
   },
   deleteTeam(id: string) {
     set({ ...state, teams: state.teams.filter((x) => x.id !== id) })
@@ -234,7 +239,9 @@ export const actions = {
       people,
       teams: [{ id: uid(), name: 'Team Beispiel', personIds: [people[0].id, people[1].id, people[2].id] }],
       meetings: [
-        mk('Wochenplanung', 1, 30, [0, 1], undefined, 'up'),
+        mk('Wochenplanung', 7, 30, [0, 1], undefined, 'up'),
+        mk('Wochenplanung', 14, 30, [0, 1], undefined, 'up'),
+        mk('Wochenplanung', 21, 30, [0, 1], undefined, 'neutral'),
         mk('Abstimmung Projekt', 3, 90, [0, 1, 2], undefined, 'neutral'),
         mk('Kurzes Update', 8, 15, [0, 2], undefined, 'up'),
         mk('Teamrunde mit Pauschale', 5, 60, [0], { count: 8, rateCents: 3000 }, 'down'),

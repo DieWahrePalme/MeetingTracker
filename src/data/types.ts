@@ -50,6 +50,8 @@ export interface AppData {
   companyName: string
   people: Person[]
   teams: Team[]
+  /** Ausgeblendete Vorschläge für wiederkehrende Meetings (Serie + Fälligkeitstag). */
+  hiddenSuggestions: string[]
   meetings: Meeting[]
   live: LiveMeeting | null
 }

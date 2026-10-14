@@ -39,6 +39,20 @@ describe('Import (parseData)', () => {
   })
 })
 
+describe('Ausgeblendete Vorschläge', () => {
+  const file = (extra: object) => ({ version: 1, companyName: 'X', people: [], meetings: [], ...extra })
+  it('alte Dateien: leere Liste, neue Dateien: Liste bleibt erhalten', () => {
+    expect(parseData(file({})).hiddenSuggestions).toEqual([])
+    expect(parseData(file({ hiddenSuggestions: ['a|1', 5] })).hiddenSuggestions).toEqual(['a|1'])
+  })
+  it('hideSuggestion merkt sich die Serie', () => {
+    actions.clearAll()
+    actions.hideSuggestion('x|1')
+    expect(JSON.parse(actions.exportJson()).hiddenSuggestions).toEqual(['x|1'])
+    actions.clearAll()
+  })
+})
+
 describe('Teams und Archiv', () => {
   const file = (extra: object) => ({ version: 1, companyName: 'X', people: [], meetings: [], ...extra })
 
