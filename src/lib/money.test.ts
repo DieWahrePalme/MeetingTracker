@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { costCents, formatDuration, formatEuro, formatPersonTime, parseEuroToCents } from './money'
+import { costCents, formatDuration, formatEuro, parseEuroToCents } from './money'
 
 describe('costCents', () => {
   it('30 Min bei 30 €/h = 15 €', () => {
@@ -57,22 +57,10 @@ describe('formatDuration', () => {
   })
 })
 
-describe('formatPersonTime', () => {
-  it('Stunden und Minuten', () => {
-    expect(formatPersonTime(36000)).toBe('10 Std.')
-    expect(formatPersonTime(5400)).toBe('1 Std. 30 Min.')
-    expect(formatPersonTime(2700)).toBe('45 Min.')
-    expect(formatPersonTime(0)).toBe('0 Min.')
-  })
-  it('unter einer Minute in Sekunden', () => {
-    expect(formatPersonTime(30)).toBe('30 Sek.')
-  })
-  it('rundet auf ganze Minuten, auch über die Stunde', () => {
-    expect(formatPersonTime(3599)).toBe('1 Std.')
-    expect(formatPersonTime(3629)).toBe('1 Std.')
-    expect(formatPersonTime(3631)).toBe('1 Std. 1 Min.')
-  })
-  it('große Summen mit Tausenderpunkt', () => {
-    expect(formatPersonTime(1234 * 3600)).toBe('1.234 Std.')
+describe('Zeit aller Teilnehmer als h:mm:ss', () => {
+  it('Summen über 100 Stunden bleiben in Stunden', () => {
+    expect(formatDuration(200 * 3600 + 45 * 60 + 12)).toBe('200:45:12')
+    expect(formatDuration(1234 * 3600)).toBe('1234:00:00')
+    expect(formatDuration(36000)).toBe('10:00:00')
   })
 })

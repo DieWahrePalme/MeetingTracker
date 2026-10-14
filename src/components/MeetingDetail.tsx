@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { actions } from '../data/store'
 import type { Meeting } from '../data/types'
-import { costCents, formatDuration, formatEuro, formatPersonTime } from '../lib/money'
+import { costCents, formatDuration, formatEuro } from '../lib/money'
 import { groupCost, headCount, meetingCost, personSeconds } from '../lib/stats'
 import { t } from '../texts'
 import { MeetingForm } from './MeetingForm'
@@ -34,7 +34,7 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
           {new Date(meeting.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
           {formatDuration(meeting.durationSec)} Std.
         </p>
-        <p className="muted">{t.detail.personTime(headCount(meeting), formatPersonTime(personSeconds(meeting)))}</p>
+        <p className="muted">{t.detail.personTime(headCount(meeting), formatDuration(personSeconds(meeting)))}</p>
       </div>
       <h3>{t.detail.perPerson}</h3>
       <ul className="plain list detail-list">

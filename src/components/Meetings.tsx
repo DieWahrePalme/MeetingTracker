@@ -3,7 +3,7 @@ import { useData } from '../data/store'
 import { suggestRecurring } from '../lib/recurring'
 import type { Suggestion } from '../lib/recurring'
 import type { Meeting } from '../data/types'
-import { formatDuration, formatEuro, formatPersonTime } from '../lib/money'
+import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, personSeconds, valueByRating } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
@@ -53,7 +53,7 @@ export function Meetings() {
   const [suggested, setSuggested] = useState<Suggestion | null>(null)
 
   const valueOf = (m: Meeting) => (metric === 'cost' ? meetingCost(m) : personSeconds(m))
-  const fmt = (v: number) => (metric === 'cost' ? formatEuro(v) : formatPersonTime(v))
+  const fmt = (v: number) => (metric === 'cost' ? formatEuro(v) : formatDuration(v))
   const sum = (ms: Meeting[]) => ms.reduce((s, m) => s + valueOf(m), 0)
 
   const inPeriod = meetings.filter((m) => matches(m, filter))
@@ -67,6 +67,8 @@ export function Meetings() {
   const active = periodActive || ratingFilter !== null || search.trim() !== ''
   const filterCount = (filter.year !== null ? 1 : 0) + (filter.month !== null ? 1 : 0) + (filter.day !== null ? 1 : 0) + (ratingFilter !== null ? 1 : 0)
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
+  // Die große Zahl schrumpft, wenn sie länger wird als etwa "5.000,60 €", damit sie in eine Zeile passt.
+  const heroText = fmt(sum(meetings))
   const open = meetings.find((m) => m.id === openId)
   const suggestions = suggestRecurring(meetings, Date.now(), hiddenSuggestions)
 
@@ -75,15 +77,26 @@ export function Meetings() {
       <section className="hero">
         <div className="hero-top">
           <p className="label">{metric === 'cost' ? t.total : t.totalTime}</p>
-          <div className="segment mini" role="group" aria-label={t.metric.label}>
-            {(['cost', 'time'] as const).map((k) => (
-              <button key={k} className={metric === k ? 'on' : ''} aria-pressed={metric === k} onClick={() => setMetric(k)}>
-                {t.metric[k]}
-              </button>
-            ))}
-          </div>
+          <button
+            className={'metric-switch' + (metric === 'time' ? ' time' : '')}
+            role="switch"
+            aria-checked={metric === 'time'}
+            aria-label={t.metric.label}
+            onClick={() => setMetric(metric === 'cost' ? 'time' : 'cost')}
+          >
+            <span className="thumb" aria-hidden="true" />
+            <svg className="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M17.5 6.6A7 7 0 1 0 17.5 17.4M5 10h9M5 14h9" />
+            </svg>
+            <svg className="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </button>
         </div>
-        <p className="total">{fmt(sum(meetings))}</p>
+        <p className="total" style={{ fontSize: `calc(clamp(2.5rem, 13vw, 3.8rem) * ${Math.min(1, 10 / heroText.length)})` }}>
+          {heroText}
+        </p>
         <p className="muted">
           {metric === 'cost'
             ? t.totalSub(meetings.length, formatDuration(meetings.reduce((s, m) => s + m.durationSec, 0)))
