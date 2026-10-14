@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { t } from '../texts'
 
@@ -25,15 +25,31 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
   useEffect(() => {
     const v = window.visualViewport
     if (!v) return
-    const update = () => setView({ top: v.offsetTop, height: v.height, keyboard: window.innerHeight - v.height > 120 })
+    // Der sichtbare Bereich ändert sich mit der Tastatur. Safari meldet das Ende nicht immer per Ereignis,
+    // darum zusätzlich alle 300 ms nachsehen (setzt nur neu, wenn sich etwas geändert hat).
+    const update = () =>
+      setView((prev) => {
+        const height = Math.min(v.height, window.innerHeight) // nie größer als der Bildschirm
+        const next = { top: v.offsetTop, height, keyboard: window.innerHeight - height > 120 }
+        return prev && prev.top === next.top && prev.height === next.height ? prev : next
+      })
     update()
     v.addEventListener('resize', update)
     v.addEventListener('scroll', update)
+    const id = setInterval(update, 300)
     return () => {
       v.removeEventListener('resize', update)
       v.removeEventListener('scroll', update)
+      clearInterval(id)
     }
   }, [])
+
+  // Nach oben/unten wischen im Fenster schließt die Tastatur (statt daneben tippen zu müssen).
+  const touchY = useRef(0)
+  const dismissKeyboardOnScroll = (e: React.TouchEvent) => {
+    const a = document.activeElement
+    if (a instanceof HTMLInputElement && Math.abs(e.touches[0].clientY - touchY.current) > 14) a.blur()
+  }
 
   return (
     <div
@@ -62,7 +78,9 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
             </svg>
           </button>
         </div>
-        <div className="sheet-body">{children}</div>
+        <div className="sheet-body" onTouchStart={(e) => (touchY.current = e.touches[0].clientY)} onTouchMove={dismissKeyboardOnScroll}>
+          {children}
+        </div>
         {actions && <div className="sheet-actions">{actions}</div>}
       </div>
     </div>

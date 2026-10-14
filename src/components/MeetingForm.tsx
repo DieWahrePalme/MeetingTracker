@@ -28,12 +28,15 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
   const [ids, setIds] = useState<string[]>(src?.participants.map((p) => p.personId) ?? [])
   const [group, setGroup] = useState(groupToInput(src?.group))
   const [rating, setRating] = useState<Rating | undefined>(meeting?.rating)
+  const [more, setMore] = useState(!!src?.group || !!meeting?.rating)
 
   // Zuletzt genutzte zuerst; archivierte nur, wenn sie schon im Meeting sind; gelöschte Personen aus dem Meeting bleiben wählbar.
   const options = pickOptions(people, meetings, src?.participants.map((p) => p.personId) ?? [], src?.participants ?? [])
 
   const durationSec = (Number(h) || 0) * 3600 + (Number(m) || 0) * 60 + (Number(s) || 0)
   const flat = inputToGroup(group)
+  const showMore = more || !!groupError(group)
+  const summary = [flat && t.form.moreGroup(flat.count), rating && t.rating[rating]].filter(Boolean).join(' · ')
   const error =
     durationSec <= 0 ? t.form.errDuration : groupError(group) || (ids.length === 0 && !flat ? t.form.errPeople : '')
 
@@ -53,25 +56,27 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
         <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>
         <button className="btn primary" disabled={!!error} onClick={save}>{t.form.save}</button>
       </>}>
-      <label className="field">
-        <span>{t.form.title}</span>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Meeting" />
-      </label>
-      <label className="field">
-        <span>{t.form.date}</span>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      </label>
-      <div className="field">
-        <span>{t.form.duration}</span>
-        <div className="dur">
-          {([[h, setH, t.form.h], [m, setM, t.form.m], [s, setS, t.form.s]] as const).map(([v, set, label]) => (
-            <label key={label}>
-              <input type="number" inputMode="numeric" min={0} value={v} onChange={(e) => set(e.target.value)} />
-              <small>{label}</small>
-            </label>
-          ))}
+      <div className="form-list">
+        <div className="form-row">
+          <input className="bare" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t.form.titlePlaceholder} aria-label={t.form.title} />
+        </div>
+        <label className="form-row">
+          <span>{t.form.date}</span>
+          <input className="bare right" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <div className="form-row" role="group" aria-label={t.form.duration}>
+          <span>{t.form.duration}</span>
+          <div className="dur-inline">
+            {([[h, setH, t.form.h], [m, setM, t.form.m], [s, setS, t.form.s]] as const).map(([v, set, label]) => (
+              <label key={label}>
+                <input type="number" inputMode="numeric" min={0} value={v} onChange={(e) => set(e.target.value)} aria-label={label} />
+                <small>{label}</small>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
+
       <div className="field">
         <span>{t.form.who}</span>
         {options.length === 0 ? (
@@ -80,8 +85,22 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
           <PersonPicker options={options} selected={ids} onChange={setIds} teams={teams} />
         )}
       </div>
-      <GroupFields value={group} onChange={setGroup} />
-      <RatingPicker value={rating} onChange={setRating} />
+
+      <div className="more">
+        <button type="button" className="disclosure" aria-expanded={showMore} onClick={() => setMore(!more)}>
+          <span>{t.form.more}</span>
+          {summary && <span className="badge">{summary}</span>}
+          <svg className="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {showMore && (
+          <>
+            <GroupFields value={group} onChange={setGroup} />
+            <RatingPicker value={rating} onChange={setRating} />
+          </>
+        )}
+      </div>
       {error && <p className="error">{error}</p>}
     </Sheet>
   )

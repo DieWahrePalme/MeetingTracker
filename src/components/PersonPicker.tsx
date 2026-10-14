@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Team } from '../data/types'
 import { norm } from '../lib/people'
 import type { PickOption } from '../lib/people'
@@ -20,6 +20,8 @@ export function PersonPicker({
   teams?: Team[]
 }) {
   const [query, setQuery] = useState('')
+  const [focused, setFocused] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
   const toggle = (id: string) => onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id])
 
   // Teams: nur Mitglieder, die gerade wählbar sind (nicht archiviert, nicht gelöscht)
@@ -73,6 +75,7 @@ export function PersonPicker({
     <div className="picker">
       {teamRow}
       <input
+        ref={searchRef}
         type="search"
         className="input"
         value={query}
@@ -80,6 +83,8 @@ export function PersonPicker({
         aria-label={t.pick.search}
         enterKeyHint="done"
         autoComplete="off"
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -88,12 +93,18 @@ export function PersonPicker({
               toggle(matches[0].id)
               setQuery('')
             }
+            e.currentTarget.blur() // Tastatur schließen
           }
         }}
       />
       <div className="picker-head">
         <span>{t.pick.selected(chosen.length)}</span>
         <span className="picker-actions">
+          {focused && (
+            <button type="button" className="link done" onClick={() => searchRef.current?.blur()}>
+              {t.pick.done}
+            </button>
+          )}
           {q && matches.length > 0 && (
             <button
               type="button"
