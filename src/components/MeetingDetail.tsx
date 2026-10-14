@@ -26,16 +26,17 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
         >
           {t.detail.delete}
         </button>
-        <button className="btn ghost" onClick={() => setEditing(true)}>{t.detail.edit}</button>
-        <button className="btn primary" onClick={onClose}>{t.detail.close}</button>
+        <button className="btn primary" onClick={() => setEditing(true)}>{t.detail.edit}</button>
       </>}>
-      <p className="muted">
-        {new Date(meeting.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
-        {formatDuration(meeting.durationSec)}
-      </p>
-      <p className="big">{formatEuro(meetingCost(meeting))}</p>
+      <div className="detail-top">
+        <p className="big">{formatEuro(meetingCost(meeting))}</p>
+        <p className="muted">
+          {new Date(meeting.startedAt).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
+          {formatDuration(meeting.durationSec)} Std.
+        </p>
+      </div>
       <h3>{t.detail.perPerson}</h3>
-      <ul className="plain">
+      <ul className="plain list detail-list">
         {meeting.participants.map((p) => (
           <li key={p.personId} className="line">
             <div>
@@ -54,8 +55,10 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
           </li>
         )}
       </ul>
-      <button className="btn ghost wide" onClick={() => setCopying(true)}>{t.detail.duplicate}</button>
-      <small className="muted">{t.detail.duplicateNote}</small>
+      <div className="duplicate">
+        <button className="btn ghost wide" onClick={() => setCopying(true)}>{t.detail.duplicate}</button>
+        <small className="muted">{t.detail.duplicateNote}</small>
+      </div>
       <RatingPicker value={meeting.rating} onChange={(r) => actions.setRating(meeting.id, r ?? null)} />
     </Sheet>
   )

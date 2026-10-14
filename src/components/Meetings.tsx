@@ -21,6 +21,7 @@ export function Meetings() {
   const [sort, setSort] = useState<'newest' | 'expensive'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
   const [search, setSearch] = useState('')
+  const [filterOpen, setFilterOpen] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [suggested, setSuggested] = useState<Suggestion | null>(null)
@@ -36,6 +37,7 @@ export function Meetings() {
   const max = Math.max(1, ...list.map(meetingCost))
   const periodActive = filter.year !== null || filter.month !== null || filter.day !== null
   const active = periodActive || ratingFilter !== null || search.trim() !== ''
+  const filterCount = (filter.year !== null ? 1 : 0) + (filter.month !== null ? 1 : 0) + (filter.day !== null ? 1 : 0) + (ratingFilter !== null ? 1 : 0)
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
   const open = meetings.find((m) => m.id === openId)
   const suggestions = suggestRecurring(meetings, Date.now(), hiddenSuggestions)
@@ -50,75 +52,10 @@ export function Meetings() {
 
       <Suggestions items={suggestions} onCreate={setSuggested} />
 
-      <LiveCard />
-
-      <section className="card">
-        <div className="filters" role="group" aria-label={t.filter.title}>
-          <label>
-            <small>{t.filter.year}</small>
-            <select value={filter.year ?? ''} onChange={(e) => setFilter({ ...filter, year: num(e.target.value) })}>
-              <option value="">{t.filter.all}</option>
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </label>
-          <label>
-            <small>{t.filter.month}</small>
-            <select value={filter.month ?? ''} onChange={(e) => setFilter({ ...filter, month: num(e.target.value), day: null })}>
-              <option value="">{t.filter.all}</option>
-              {t.filter.months.map((name, i) => <option key={name} value={i}>{name}</option>)}
-            </select>
-          </label>
-          <label>
-            <small>{t.filter.day}</small>
-            <select value={filter.day ?? ''} disabled={filter.month === null} onChange={(e) => setFilter({ ...filter, day: num(e.target.value) })}>
-              <option value="">{t.filter.all}</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}.</option>)}
-            </select>
-          </label>
-        </div>
-        {(meetings.length >= 6 || search) && (
-          <input
-            type="search"
-            className="input"
-            value={search}
-            placeholder={t.search.placeholder}
-            aria-label={t.search.placeholder}
-            autoComplete="off"
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        )}
-        <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
-          {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
-            <button
-              key={k ?? 'all'}
-              className={'chip' + (ratingFilter === k ? ' on' : '')}
-              aria-pressed={ratingFilter === k}
-              onClick={() => setRatingFilter(k)}
-            >
-              {k && k !== 'none' && <RatingIcon rating={k} size={16} />}
-              {k === null ? t.rating.all : t.rating[k]}
-            </button>
-          ))}
-        </div>
-        {active && (
-          <div className="line result">
-            <div>
-              <small className="muted">{t.filter.result}</small>
-              <strong className="mid">{formatEuro(totalCost(filtered))}</strong>
-            </div>
-            <button
-              className="link"
-              onClick={() => {
-                setFilter(noFilter)
-                setRatingFilter(null)
-                setSearch('')
-              }}
-            >
-              {t.filter.reset}
-            </button>
-          </div>
-        )}
-      </section>
+      <div className="actions">
+        <LiveCard />
+        <button className="btn ghost wide" onClick={() => setAdding(true)}>{t.manual}</button>
+      </div>
 
       {anyRated && (
         <section className="card split">
@@ -145,7 +82,87 @@ export function Meetings() {
         </section>
       )}
 
-      <div className="segment" role="group">
+      {(meetings.length >= 6 || search) && (
+        <input
+          type="search"
+          className="input"
+          value={search}
+          placeholder={t.search.placeholder}
+          aria-label={t.search.placeholder}
+          autoComplete="off"
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      )}
+
+      <section className="card filter-card">
+        <button className="disclosure" aria-expanded={filterOpen} onClick={() => setFilterOpen(!filterOpen)}>
+          <span>{t.filter.title}</span>
+          {filterCount > 0 && <span className="badge">{t.filter.active(filterCount)}</span>}
+          <svg className="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {filterOpen && (
+        <>
+        <div className="filters" role="group" aria-label={t.filter.title}>
+          <label>
+            <small>{t.filter.year}</small>
+            <select value={filter.year ?? ''} onChange={(e) => setFilter({ ...filter, year: num(e.target.value) })}>
+              <option value="">{t.filter.all}</option>
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </label>
+          <label>
+            <small>{t.filter.month}</small>
+            <select value={filter.month ?? ''} onChange={(e) => setFilter({ ...filter, month: num(e.target.value), day: null })}>
+              <option value="">{t.filter.all}</option>
+              {t.filter.months.map((name, i) => <option key={name} value={i}>{name}</option>)}
+            </select>
+          </label>
+          <label>
+            <small>{t.filter.day}</small>
+            <select value={filter.day ?? ''} disabled={filter.month === null} onChange={(e) => setFilter({ ...filter, day: num(e.target.value) })}>
+              <option value="">{t.filter.all}</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}.</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
+          {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
+            <button
+              key={k ?? 'all'}
+              className={'chip' + (ratingFilter === k ? ' on' : '')}
+              aria-pressed={ratingFilter === k}
+              onClick={() => setRatingFilter(k)}
+            >
+              {k && k !== 'none' && <RatingIcon rating={k} size={16} />}
+              {k === null ? t.rating.all : t.rating[k]}
+            </button>
+          ))}
+        </div>
+        </>
+        )}
+        {active && (
+          <div className="line result">
+            <div>
+              <small className="muted">{t.filter.result}</small>
+              <strong className="mid">{formatEuro(totalCost(filtered))}</strong>
+            </div>
+            <button
+              className="link"
+              onClick={() => {
+                setFilter(noFilter)
+                setRatingFilter(null)
+                setSearch('')
+              }}
+            >
+              {t.filter.reset}
+            </button>
+          </div>
+        )}
+      </section>
+
+      <div className="segment full" role="group">
         {(['newest', 'expensive'] as const).map((k) => (
           <button key={k} className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
             {t.sort[k]}
@@ -176,8 +193,6 @@ export function Meetings() {
           ))}
         </ul>
       )}
-
-      <button className="btn ghost wide" onClick={() => setAdding(true)}>{t.manual}</button>
 
       {adding && <MeetingForm onClose={() => setAdding(false)} />}
       {suggested && (

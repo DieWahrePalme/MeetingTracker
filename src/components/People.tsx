@@ -243,19 +243,12 @@ export function People() {
 
   return (
     <>
-      <div className="people-top">
-        <div className="segment" role="group">
-          {(['list', 'teams', 'score'] as const).map((k) => (
-            <button key={k} className={view === k ? 'on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>
-              {k === 'list' ? t.people.viewList : k === 'teams' ? t.people.viewTeams : t.people.viewScore}
-            </button>
-          ))}
-        </div>
-        {view === 'teams' ? (
-          <button className="btn primary" onClick={() => setEditingTeam('new')} disabled={activeTotal === 0}>{t.people.team.add}</button>
-        ) : (
-          <button className="btn primary" onClick={() => setEditing('new')}>{t.people.add}</button>
-        )}
+      <div className="segment full" role="group">
+        {(['list', 'teams', 'score'] as const).map((k) => (
+          <button key={k} className={view === k ? 'on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>
+            {k === 'list' ? t.people.viewList : k === 'teams' ? t.people.viewTeams : t.people.viewScore}
+          </button>
+        ))}
       </div>
 
       {view !== 'teams' && (data.people.length > 6 || query) && (
@@ -268,6 +261,12 @@ export function People() {
           autoComplete="off"
           onChange={(e) => setQuery(e.target.value)}
         />
+      )}
+      {view === 'teams' && (
+        <button className="btn primary wide" onClick={() => setEditingTeam('new')} disabled={activeTotal === 0}>{t.people.team.add}</button>
+      )}
+      {view === 'list' && (
+        <button className="btn primary wide" onClick={() => setEditing('new')}>{t.people.add}</button>
       )}
       {view !== 'teams' && query && <p className="muted">{t.people.shown(view === 'list' ? found.length : scores.length, view === 'list' ? data.people.length : allScores.length)}</p>}
 

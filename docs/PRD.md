@@ -94,6 +94,17 @@ immer nur der Stundensatz (Cent), das Gehalt wird nicht gespeichert.
 - Hinweis im Formular: "Näherungswert, inkl. ca. 20 % Arbeitgeberkosten".
 - Beispiele (Tests): 1.700 Std: 35,88 / 53,53 / 70,00 €; 2.080 Std: 29,33 / 43,75 / 57,21 €.
 
+## Gestaltung nach Apples HIG (2026-10-14, nach Screenshots von Moritz)
+Rein visuell, keine Logik. Getestet auf iPhone-Format mit 50 Personen, hell und dunkel.
+- Grundgröße 17 px (iOS), alle Größen in rem, Kontraste geprüft (Text auf Fläche mindestens 4,5:1).
+- Listen als gruppierte Fläche mit feinen Trennlinien statt einzelner schwebender Karten (Meetings, Personen, Score, Detail).
+- Buttons als Kapseln mit klaren Rollen: Hauptaktion gefüllt, zweite Aktion grau, Löschen rot getönt (nie als Hauptbutton). Druckzustand überall.
+- Umschalter (Segmente) immer volle Breite und gleich breit. Chips-Reihen scrollen waagerecht statt umzubrechen.
+- Fenster (Sheets): Griff, Titel, Schließen oben (X), Buttons fest unten, Seite dahinter ist gesperrt (kein Durchscrollen).
+- Startseite: Gesamtkosten, dann "Meeting starten" und "Meeting nachtragen" zusammen, Bewertungs-Aufteilung, Suche, Filter eingeklappt (Zähler "n aktiv"), Sortierung, Liste.
+- Tab-Leiste unten durchscheinend (Blur), mit Rückfall auf einfarbig bei "Transparenz reduzieren". `theme-color` für hell und dunkel.
+- Texte: Verben auf Buttons, kurze Hinweise, "Std." bei Zeiten, Reiter "Score" statt "Meeting-Score" (passt in den Umschalter).
+
 ## Look and feel
 Very simple, very light, modern, banking style (Revolut, Finanzguru): big
 numbers, soft cards, clear hierarchy, lots of whitespace, smooth small
