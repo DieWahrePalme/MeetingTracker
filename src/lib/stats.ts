@@ -24,6 +24,15 @@ export function headCount(m: Meeting): number {
   return m.participants.length + (m.group?.count ?? 0)
 }
 
+/** Zeit aller Teilnehmer zusammen in Sekunden: Dauer x Personen (1 Std. mit 10 Personen = 10 Std.). */
+export function personSeconds(m: Meeting): number {
+  return m.durationSec * headCount(m)
+}
+
+export function totalPersonSeconds(ms: Meeting[]): number {
+  return ms.reduce((sum, m) => sum + personSeconds(m), 0)
+}
+
 export function totalCost(ms: Meeting[]): number {
   return ms.reduce((sum, m) => sum + meetingCost(m), 0)
 }
@@ -52,20 +61,26 @@ export function matchesRating(m: Meeting, f: RatingFilter): boolean {
 
 export type RatingKey = Rating | 'none'
 
-/** Kosten (Cent) und Anzahl Meetings je Bewertung, inklusive unbewertet. */
-export function costByRating(ms: Meeting[]): Record<RatingKey, { cents: number; count: number }> {
-  const out: Record<RatingKey, { cents: number; count: number }> = {
-    up: { cents: 0, count: 0 },
-    neutral: { cents: 0, count: 0 },
-    down: { cents: 0, count: 0 },
-    none: { cents: 0, count: 0 },
+/** Summe eines Werts (Kosten oder Zeit) und Anzahl Meetings je Bewertung, inklusive unbewertet. */
+export function valueByRating(ms: Meeting[], valueOf: (m: Meeting) => number): Record<RatingKey, { value: number; count: number }> {
+  const out: Record<RatingKey, { value: number; count: number }> = {
+    up: { value: 0, count: 0 },
+    neutral: { value: 0, count: 0 },
+    down: { value: 0, count: 0 },
+    none: { value: 0, count: 0 },
   }
   for (const m of ms) {
     const k: RatingKey = m.rating ?? 'none'
-    out[k].cents += meetingCost(m)
+    out[k].value += valueOf(m)
     out[k].count += 1
   }
   return out
+}
+
+/** Kosten (Cent) und Anzahl Meetings je Bewertung. */
+export function costByRating(ms: Meeting[]): Record<RatingKey, { cents: number; count: number }> {
+  const v = valueByRating(ms, meetingCost)
+  return { up: { cents: v.up.value, count: v.up.count }, neutral: { cents: v.neutral.value, count: v.neutral.count }, down: { cents: v.down.value, count: v.down.count }, none: { cents: v.none.value, count: v.none.count } }
 }
 
 export interface PersonScore {

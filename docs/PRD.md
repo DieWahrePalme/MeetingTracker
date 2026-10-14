@@ -94,6 +94,14 @@ immer nur der Stundensatz (Cent), das Gehalt wird nicht gespeichert.
 - Hinweis im Formular: "Näherungswert, inkl. ca. 20 % Arbeitgeberkosten".
 - Beispiele (Tests): 1.700 Std: 35,88 / 53,53 / 70,00 €; 2.080 Std: 29,33 / 43,75 / 57,21 €.
 
+## Anzeige Kosten oder Zeit, aufgeräumte Startseite (Wunsch von Moritz, 2026-10-14)
+- **Umschalter Kosten | Zeit** oben auf der Startseite (merkt sich die Wahl auf dem Gerät, `localStorage` `meetingtracker.metric`).
+  Kosten = Stundenlohn × Zeit (wie bisher, in Euro). Zeit = Dauer × Teilnehmer, also 1 Std. mit 10 Personen = 10 Std.
+  Teilnehmer = benannte Personen + Pauschale. Anzeige als "10 Std.", "1 Std. 30 Min.", "45 Min." (auf Minuten gerundet, unter einer Minute in Sekunden).
+- Der Umschalter gilt für: Gesamtzahl oben, Wert je Meeting in der Liste (und der Balken), "Davon in schlechten Meetings", Aufteilung nach Bewertung, Ergebniszeile bei Filtern und die Sortierung ("Teuerste" bei Kosten, "Längste" bei Zeit). Das Meeting-Detail zeigt beides: Kosten groß, darunter "40 Personen · 60 Std. Gesamtzeit".
+- **Suche mit Filter-Symbol:** Suchfeld und daneben ein Filter-Symbol (mit Zähler für aktive Filter). Es klappt Jahr/Monat/Tag, Bewertung und Sortierung auf. Bei aktiven Filtern steht darunter eine schlanke Zeile mit dem Ergebnis und "Zurücksetzen".
+- "Meeting starten" und "Nachtragen" stehen nebeneinander, die Bewertungs-Karte ist kompakter (Wert, Balken, eine Legendenzeile).
+
 ## Gestaltung nach Apples HIG (2026-10-14, nach Screenshots von Moritz)
 Rein visuell, keine Logik. Getestet auf iPhone-Format mit 50 Personen, hell und dunkel.
 - Grundgröße 17 px (iOS), alle Größen in rem, Kontraste geprüft (Text auf Fläche mindestens 4,5:1).

@@ -34,6 +34,20 @@ export function formatDuration(totalSeconds: number): string {
   return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
+/**
+ * Zeit als "Std. / Min." für Summen über Personen: 36000 -> "10 Std.", 5400 -> "1 Std. 30 Min.",
+ * 2700 -> "45 Min.", 30 -> "30 Sek." Ab einer Minute wird auf ganze Minuten gerundet.
+ */
+export function formatPersonTime(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds))
+  if (s > 0 && s < 60) return `${s} Sek.`
+  const totalMinutes = Math.round(s / 60)
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  if (h === 0) return `${m} Min.`
+  return m === 0 ? `${intFormat.format(h)} Std.` : `${intFormat.format(h)} Std. ${m} Min.`
+}
+
 /** Stunden mit einer Nachkommastelle für Statistiken: 5400 -> "1,5 h" */
 export function formatHours(totalSeconds: number): string {
   return `${(Math.round(totalSeconds / 360) / 10).toLocaleString('de-DE', { minimumFractionDigits: 1 })} h`

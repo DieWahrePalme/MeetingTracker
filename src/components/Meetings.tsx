@@ -3,8 +3,8 @@ import { useData } from '../data/store'
 import { suggestRecurring } from '../lib/recurring'
 import type { Suggestion } from '../lib/recurring'
 import type { Meeting } from '../data/types'
-import { formatDuration, formatEuro } from '../lib/money'
-import { costByRating, headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, totalCost } from '../lib/stats'
+import { formatDuration, formatEuro, formatPersonTime } from '../lib/money'
+import { headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, personSeconds, valueByRating } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
 import { t } from '../texts'
 import { LiveCard } from './LiveCard'
@@ -15,10 +15,36 @@ import { Suggestions } from './Suggestions'
 
 const num = (v: string) => (v === '' ? null : Number(v))
 
+type Metric = 'cost' | 'time'
+const METRIC_KEY = 'meetingtracker.metric'
+
+/** Anzeige: Kosten in Euro oder Zeit aller Teilnehmer. Die Wahl bleibt auf diesem Gerät gespeichert. */
+function useMetric(): [Metric, (m: Metric) => void] {
+  const [metric, setMetric] = useState<Metric>(() => {
+    try {
+      return localStorage.getItem(METRIC_KEY) === 'time' ? 'time' : 'cost'
+    } catch {
+      return 'cost'
+    }
+  })
+  return [
+    metric,
+    (m) => {
+      setMetric(m)
+      try {
+        localStorage.setItem(METRIC_KEY, m)
+      } catch {
+        /* nicht gespeichert, gilt nur für diese Sitzung */
+      }
+    },
+  ]
+}
+
 export function Meetings() {
   const { meetings, hiddenSuggestions } = useData()
+  const [metric, setMetric] = useMetric()
   const [filter, setFilter] = useState<Filter>(noFilter)
-  const [sort, setSort] = useState<'newest' | 'expensive'>('newest')
+  const [sort, setSort] = useState<'newest' | 'value'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
   const [search, setSearch] = useState('')
   const [filterOpen, setFilterOpen] = useState(false)
@@ -26,15 +52,17 @@ export function Meetings() {
   const [adding, setAdding] = useState(false)
   const [suggested, setSuggested] = useState<Suggestion | null>(null)
 
+  const valueOf = (m: Meeting) => (metric === 'cost' ? meetingCost(m) : personSeconds(m))
+  const fmt = (v: number) => (metric === 'cost' ? formatEuro(v) : formatPersonTime(v))
+  const sum = (ms: Meeting[]) => ms.reduce((s, m) => s + valueOf(m), 0)
+
   const inPeriod = meetings.filter((m) => matches(m, filter))
   const filtered = inPeriod.filter((m) => matchesRating(m, ratingFilter) && matchesSearch(m, search))
-  const split = costByRating(inPeriod)
-  const splitTotal = totalCost(inPeriod)
+  const split = valueByRating(inPeriod, valueOf)
+  const splitTotal = sum(inPeriod)
   const anyRated = inPeriod.some((m) => m.rating)
-  const list: Meeting[] = [...filtered].sort((a, b) =>
-    sort === 'newest' ? b.startedAt - a.startedAt : meetingCost(b) - meetingCost(a),
-  )
-  const max = Math.max(1, ...list.map(meetingCost))
+  const list: Meeting[] = [...filtered].sort((a, b) => (sort === 'newest' ? b.startedAt - a.startedAt : valueOf(b) - valueOf(a)))
+  const max = Math.max(1, ...list.map(valueOf))
   const periodActive = filter.year !== null || filter.month !== null || filter.day !== null
   const active = periodActive || ratingFilter !== null || search.trim() !== ''
   const filterCount = (filter.year !== null ? 1 : 0) + (filter.month !== null ? 1 : 0) + (filter.day !== null ? 1 : 0) + (ratingFilter !== null ? 1 : 0)
@@ -45,29 +73,40 @@ export function Meetings() {
   return (
     <>
       <section className="hero">
-        <p className="label">{t.total}</p>
-        <p className="total">{formatEuro(totalCost(meetings))}</p>
-        <p className="muted">{t.totalSub(meetings.length, formatDuration(meetings.reduce((s, m) => s + m.durationSec, 0)))}</p>
+        <div className="hero-top">
+          <p className="label">{metric === 'cost' ? t.total : t.totalTime}</p>
+          <div className="segment mini" role="group" aria-label={t.metric.label}>
+            {(['cost', 'time'] as const).map((k) => (
+              <button key={k} className={metric === k ? 'on' : ''} aria-pressed={metric === k} onClick={() => setMetric(k)}>
+                {t.metric[k]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="total">{fmt(sum(meetings))}</p>
+        <p className="muted">
+          {metric === 'cost'
+            ? t.totalSub(meetings.length, formatDuration(meetings.reduce((s, m) => s + m.durationSec, 0)))
+            : t.totalSubTime(meetings.length)}
+        </p>
       </section>
 
       <Suggestions items={suggestions} onCreate={setSuggested} />
 
       <div className="actions">
         <LiveCard />
-        <button className="btn ghost wide" onClick={() => setAdding(true)}>{t.manual}</button>
+        <button className="btn ghost" onClick={() => setAdding(true)}>{t.manualShort}</button>
       </div>
 
       {anyRated && (
         <section className="card split">
           <div className="line">
-            <div>
-              <small className="muted">{t.rating.badCost}</small>
-              <strong className="mid bad">{formatEuro(split.down.cents)}</strong>
-            </div>
+            <small className="muted">{metric === 'cost' ? t.rating.badCost : t.rating.badTime}</small>
+            <strong className="mid bad">{fmt(split.down.value)}</strong>
           </div>
           <div className="stack-bar" role="img" aria-label={t.rating.split}>
             {(['up', 'neutral', 'down', 'none'] as RatingKey[]).map((k) =>
-              split[k].cents > 0 ? <i key={k} className={`seg seg-${k}`} style={{ flexGrow: split[k].cents }} /> : null,
+              split[k].value > 0 ? <i key={k} className={`seg seg-${k}`} style={{ flexGrow: split[k].value }} /> : null,
             )}
           </div>
           <ul className="plain legend">
@@ -75,100 +114,104 @@ export function Meetings() {
               <li key={k}>
                 <i className={`dot seg-${k}`} />
                 <span>{t.rating[k]}</span>
-                <strong>{splitTotal > 0 ? Math.round((split[k].cents / splitTotal) * 100) : 0} %</strong>
+                <strong>{splitTotal > 0 ? Math.round((split[k].value / splitTotal) * 100) : 0} %</strong>
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      {(meetings.length >= 6 || search) && (
+      <div className="searchbar">
         <input
           type="search"
           className="input"
           value={search}
           placeholder={t.search.placeholder}
-          aria-label={t.search.placeholder}
+          aria-label={t.search.label}
           autoComplete="off"
           onChange={(e) => setSearch(e.target.value)}
         />
+        <button
+          className={'icon-btn' + (filterOpen || filterCount > 0 ? ' on' : '')}
+          aria-label={t.filter.title}
+          aria-expanded={filterOpen}
+          onClick={() => setFilterOpen(!filterOpen)}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 7h9M19 7h1M4 17h1M11 17h9" />
+            <circle cx="16" cy="7" r="2.4" />
+            <circle cx="8" cy="17" r="2.4" />
+          </svg>
+          {filterCount > 0 && <span className="count" aria-hidden="true">{filterCount}</span>}
+        </button>
+      </div>
+
+      {filterOpen && (
+        <section className="card filter-card">
+          <div className="filters" role="group" aria-label={t.filter.title}>
+            <label>
+              <small>{t.filter.year}</small>
+              <select value={filter.year ?? ''} onChange={(e) => setFilter({ ...filter, year: num(e.target.value) })}>
+                <option value="">{t.filter.all}</option>
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </label>
+            <label>
+              <small>{t.filter.month}</small>
+              <select value={filter.month ?? ''} onChange={(e) => setFilter({ ...filter, month: num(e.target.value), day: null })}>
+                <option value="">{t.filter.all}</option>
+                {t.filter.months.map((name, i) => <option key={name} value={i}>{name}</option>)}
+              </select>
+            </label>
+            <label>
+              <small>{t.filter.day}</small>
+              <select value={filter.day ?? ''} disabled={filter.month === null} onChange={(e) => setFilter({ ...filter, day: num(e.target.value) })}>
+                <option value="">{t.filter.all}</option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}.</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
+            {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
+              <button
+                key={k ?? 'all'}
+                className={'chip' + (ratingFilter === k ? ' on' : '')}
+                aria-pressed={ratingFilter === k}
+                onClick={() => setRatingFilter(k)}
+              >
+                {k && k !== 'none' && <RatingIcon rating={k} size={16} />}
+                {k === null ? t.rating.all : t.rating[k]}
+              </button>
+            ))}
+          </div>
+          <div className="segment" role="group" aria-label={t.sort.title}>
+            {(['newest', 'value'] as const).map((k) => (
+              <button key={k} className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
+                {k === 'newest' ? t.sort.newest : metric === 'cost' ? t.sort.expensive : t.sort.longest}
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
-      <section className="card filter-card">
-        <button className="disclosure" aria-expanded={filterOpen} onClick={() => setFilterOpen(!filterOpen)}>
-          <span>{t.filter.title}</span>
-          {filterCount > 0 && <span className="badge">{t.filter.active(filterCount)}</span>}
-          <svg className="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        {filterOpen && (
-        <>
-        <div className="filters" role="group" aria-label={t.filter.title}>
-          <label>
-            <small>{t.filter.year}</small>
-            <select value={filter.year ?? ''} onChange={(e) => setFilter({ ...filter, year: num(e.target.value) })}>
-              <option value="">{t.filter.all}</option>
-              {years.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </label>
-          <label>
-            <small>{t.filter.month}</small>
-            <select value={filter.month ?? ''} onChange={(e) => setFilter({ ...filter, month: num(e.target.value), day: null })}>
-              <option value="">{t.filter.all}</option>
-              {t.filter.months.map((name, i) => <option key={name} value={i}>{name}</option>)}
-            </select>
-          </label>
-          <label>
-            <small>{t.filter.day}</small>
-            <select value={filter.day ?? ''} disabled={filter.month === null} onChange={(e) => setFilter({ ...filter, day: num(e.target.value) })}>
-              <option value="">{t.filter.all}</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}.</option>)}
-            </select>
-          </label>
-        </div>
-        <div className="chips rating-filter" role="group" aria-label={t.rating.filter}>
-          {([null, 'up', 'neutral', 'down', 'none'] as const).map((k) => (
-            <button
-              key={k ?? 'all'}
-              className={'chip' + (ratingFilter === k ? ' on' : '')}
-              aria-pressed={ratingFilter === k}
-              onClick={() => setRatingFilter(k)}
-            >
-              {k && k !== 'none' && <RatingIcon rating={k} size={16} />}
-              {k === null ? t.rating.all : t.rating[k]}
-            </button>
-          ))}
-        </div>
-        </>
-        )}
-        {active && (
-          <div className="line result">
-            <div>
-              <small className="muted">{t.filter.result}</small>
-              <strong className="mid">{formatEuro(totalCost(filtered))}</strong>
-            </div>
-            <button
-              className="link"
-              onClick={() => {
-                setFilter(noFilter)
-                setRatingFilter(null)
-                setSearch('')
-              }}
-            >
-              {t.filter.reset}
-            </button>
+      {active && (
+        <div className="line result-line">
+          <div>
+            <small className="muted">{t.filter.result}</small>
+            <strong className="mid">{fmt(sum(filtered))}</strong>
           </div>
-        )}
-      </section>
-
-      <div className="segment full" role="group">
-        {(['newest', 'expensive'] as const).map((k) => (
-          <button key={k} className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
-            {t.sort[k]}
+          <button
+            className="link"
+            onClick={() => {
+              setFilter(noFilter)
+              setRatingFilter(null)
+              setSearch('')
+            }}
+          >
+            {t.filter.reset}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
       {list.length === 0 ? (
         <p className="muted empty">{meetings.length === 0 ? t.list.empty : t.list.emptyFiltered}</p>
@@ -185,9 +228,9 @@ export function Meetings() {
                   <small className="muted">
                     {new Date(m.startedAt).toLocaleDateString('de-DE')} · {formatDuration(m.durationSec)} · {t.list.people(headCount(m))}
                   </small>
-                  <span className="bar"><i style={{ width: `${(meetingCost(m) / max) * 100}%` }} /></span>
+                  <span className="bar"><i style={{ width: `${(valueOf(m) / max) * 100}%` }} /></span>
                 </div>
-                <strong className="cost">{formatEuro(meetingCost(m))}</strong>
+                <strong className="cost">{fmt(valueOf(m))}</strong>
               </button>
             </li>
           ))}

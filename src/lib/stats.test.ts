@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchesSearch, costByRating, groupCost, headCount, matches, matchesRating, meetingCost, noFilter, personScores, totalCost } from './stats'
+import { matchesSearch, costByRating, personSeconds, totalPersonSeconds, valueByRating, groupCost, headCount, matches, matchesRating, meetingCost, noFilter, personScores, totalCost } from './stats'
 import type { Meeting } from '../data/types'
 
 const m = (startedAt: number, durationSec: number, rates: number[]): Meeting => ({
@@ -81,6 +81,28 @@ describe('Suche in der Meeting-Liste', () => {
     expect(matchesSearch(x, 'JURGEN')).toBe(true)
     expect(matchesSearch(x, 'xyz')).toBe(false)
     expect(matchesSearch(x, '  ')).toBe(true)
+  })
+})
+
+describe('Zeit aller Teilnehmer', () => {
+  it('1 Stunde mit 10 Personen = 10 Stunden', () => {
+    const x = m(1, 3600, Array(10).fill(3000))
+    expect(personSeconds(x)).toBe(36000)
+  })
+  it('zählt die Pauschale mit', () => {
+    const x = { ...m(1, 1800, [3000]), group: { count: 9, rateCents: 3000 } }
+    expect(personSeconds(x)).toBe(1800 * 10)
+  })
+  it('ohne Personen 0, Summe über Meetings', () => {
+    expect(personSeconds(m(1, 3600, []))).toBe(0)
+    expect(totalPersonSeconds([m(1, 3600, [100, 100]), m(2, 1800, [100])])).toBe(7200 + 1800)
+  })
+  it('Zeit je Bewertung', () => {
+    const ms = [rated(m(1, 3600, [1, 1]), 'down'), rated(m(2, 3600, [1]), 'up'), m(3, 1800, [1, 1, 1])]
+    const v = valueByRating(ms, personSeconds)
+    expect(v.down).toEqual({ value: 7200, count: 1 })
+    expect(v.up).toEqual({ value: 3600, count: 1 })
+    expect(v.none).toEqual({ value: 5400, count: 1 })
   })
 })
 
