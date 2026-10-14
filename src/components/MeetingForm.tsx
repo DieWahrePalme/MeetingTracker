@@ -15,7 +15,7 @@ const toDateStr = (ms: number) => {
 }
 
 /** `meeting` = bearbeiten, `copyFrom` = als Vorlage für ein neues Meeting (Duplizieren). */
-export function MeetingForm({ meeting, copyFrom, startDate, onClose }: { meeting?: Meeting; copyFrom?: Meeting; startDate?: number; onClose: () => void }) {
+export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: { meeting?: Meeting; copyFrom?: Meeting; startDate?: number; heading?: string; onClose: () => void }) {
   const { people, teams, meetings } = useData()
   const src = meeting ?? copyFrom
   const initialDate = toDateStr(meeting?.startedAt ?? Date.now())
@@ -49,7 +49,7 @@ export function MeetingForm({ meeting, copyFrom, startDate, onClose }: { meeting
   }
 
   return (
-    <Sheet title={meeting ? t.form.editTitle : copyFrom ? t.form.copyTitle : t.form.newTitle} onClose={onClose} actions={<>
+    <Sheet title={heading ?? (meeting ? t.form.editTitle : copyFrom ? t.form.copyTitle : t.form.newTitle)} onClose={onClose} actions={<>
         <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>
         <button className="btn primary" disabled={!!error} onClick={save}>{t.form.save}</button>
       </>}>

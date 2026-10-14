@@ -183,6 +183,7 @@ export function Meetings() {
       {suggested && (
         <MeetingForm
           copyFrom={suggested.last}
+          heading={t.form.createTitle}
           startDate={suggested.daysUntil <= 0 ? suggested.dueAt : undefined}
           onClose={() => setSuggested(null)}
         />

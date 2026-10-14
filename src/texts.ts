@@ -75,6 +75,7 @@ export const t = {
   form: {
     newTitle: 'Meeting nachtragen',
     copyTitle: 'Meeting duplizieren',
+    createTitle: 'Meeting anlegen',
     editTitle: 'Meeting bearbeiten',
     title: 'Titel',
     date: 'Datum',
