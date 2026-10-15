@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { actions, parseData, useData } from '../data/store'
+import { daysSince, exportBackup, lastBackup } from '../lib/backup'
 import { t } from '../texts'
 import { ConfirmDialog } from './ConfirmDialog'
 
@@ -11,13 +12,13 @@ export function Data() {
   const [clearing, setClearing] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  function download() {
-    const url = URL.createObjectURL(new Blob([actions.exportJson()], { type: 'application/json' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `meetingtracker-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+  const [last, setLast] = useState(lastBackup)
+  async function download() {
+    try {
+      if (await exportBackup()) setLast(lastBackup())
+    } catch {
+      setMsg(t.bon.failed)
+    }
   }
 
   // Erst die Datei prüfen, dann erst nach dem Ersetzen fragen
@@ -50,6 +51,7 @@ export function Data() {
       <section className="card">
         <h2>{t.data.backup}</h2>
         <p className="muted">{t.data.note}</p>
+        <p className="muted" role="status">{last ? t.data.lastBackup(daysSince(last)) : t.data.neverBackup}</p>
         <button className="btn primary" onClick={download}>{t.data.export}</button>
         <button className="btn ghost" onClick={() => fileRef.current?.click()}>{t.data.import}</button>
         <input
@@ -64,6 +66,13 @@ export function Data() {
           }}
         />
         {msg && <p className="muted" role="status">{msg}</p>}
+      </section>
+
+      <section className="card">
+        <h2>{t.data.installTitle}</h2>
+        <p className="muted">{t.data.installNote}</p>
+        <p className="muted">{t.data.installIos}</p>
+        <p className="muted">{t.data.installAndroid}</p>
       </section>
 
       <section className="card">

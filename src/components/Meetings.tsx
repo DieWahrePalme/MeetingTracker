@@ -13,6 +13,7 @@ import { LiveCard } from './LiveCard'
 import { MeetingDetail } from './MeetingDetail'
 import { MeetingForm } from './MeetingForm'
 import { RatingIcon } from './Rating'
+import { BackupBanner } from './BackupBanner'
 import { Suggestions } from './Suggestions'
 
 const num = (v: string) => (v === '' ? null : Number(v))
@@ -200,6 +201,8 @@ export function Meetings() {
               : `${t.fun.also} ${FUN_UNITS.filter((u) => u.id !== heroUnit.id).map((u) => formatUnits(heroValue, u)).join(' · ')}`}
         </p>
       </section>
+
+      <BackupBanner hasData={meetings.length > 0} />
 
       <Suggestions items={suggestions} onCreate={setSuggested} />
 
