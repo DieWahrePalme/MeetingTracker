@@ -416,11 +416,12 @@ select:disabled { opacity: 0.5; }
   .sheet-head { padding-top: 18px; }
 }
 @media (min-width: 1000px) {
-  .app.wide { max-width: 1120px; }
+  .app { max-width: 1120px; }
+  main.narrow { width: 100%; max-width: 640px; margin: 0 auto; }
   .cols { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
   .col-side { order: 2; position: sticky; top: 16px; }
   .col-main { order: 1; }
-  .app.wide .hero { padding-top: 4px; }
+  .hero { padding-top: 4px; }
 }
 
 .center-text { text-align: center; }

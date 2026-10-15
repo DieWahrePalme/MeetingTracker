@@ -1,6 +1,6 @@
 // Alle sichtbaren Texte (Deutsch) an einer Stelle.
 export const t = {
-  appName: 'MeetingTracker',
+  appName: 'ichhassemeetings',
   tabs: { meetings: 'Meetings', people: 'Personen', data: 'Daten' },
   pick: {
     search: 'Person suchen …',

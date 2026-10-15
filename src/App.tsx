@@ -11,7 +11,7 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('meetings')
   const { companyName } = useData()
   return (
-    <div className={'app' + (tab === 'meetings' ? ' wide' : '')}>
+    <div className="app">
       <header>
         <span className="brand">{companyName}</span>
         <nav className="topnav" aria-label="Bereiche">
@@ -22,7 +22,7 @@ export default function App() {
           ))}
         </nav>
       </header>
-      <main>{tab === 'meetings' ? <Meetings /> : tab === 'people' ? <People /> : <Data />}</main>
+      <main className={tab === 'meetings' ? '' : 'narrow'}>{tab === 'meetings' ? <Meetings /> : tab === 'people' ? <People /> : <Data />}</main>
     </div>
   )
 }
