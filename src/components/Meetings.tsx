@@ -97,6 +97,12 @@ export function Meetings() {
       setMetric(k)
     }
   }
+  // Einblenden (rise) nur für neu hinzugekommene Einträge, nicht beim Laden oder Tabwechsel
+  const seen = useRef<Set<string> | null>(null)
+  if (seen.current === null) seen.current = new Set(meetings.map((m) => m.id))
+  useEffect(() => {
+    meetings.forEach((m) => seen.current?.add(m.id))
+  }, [meetings])
   const [filter, setFilter] = useState<Filter>(noFilter)
   const [sort, setSort] = useState<'newest' | 'value'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
@@ -324,7 +330,7 @@ export function Meetings() {
       ) : (
         <ul className="plain list meeting-list">
           {list.map((m) => (
-            <li key={m.id}>
+            <li key={m.id} className={seen.current && !seen.current.has(m.id) ? 'rise' : undefined}>
               <button className="row-item" onClick={() => setOpenId(m.id)}>
                 <div className="grow">
                   <strong className="title">

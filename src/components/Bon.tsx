@@ -75,7 +75,7 @@ export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeti
           <hr />
           <div className="b-sum">
             <span>{t.bon.sum}</span>
-            <strong><CountUp value={meetingCost(meeting)} format={formatEuro} duration={1100} /></strong>
+            <strong><CountUp value={meetingCost(meeting)} format={formatEuro} duration={600} fromZero /></strong>
           </div>
           {fun && <p className="fun-line">{t.bon.fun(fun)}</p>}
           <div className="barcode" aria-hidden="true" />
