@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { actions } from '../data/store'
+import { actions, useData } from '../data/store'
+import { bonNumber } from '../lib/bon'
 import type { Meeting } from '../data/types'
 import { costCents, formatDuration, formatEuro } from '../lib/money'
 import { groupCost, headCount, meetingCost, personSeconds } from '../lib/stats'
 import { t } from '../texts'
 import { CountUp } from './CountUp'
+import { BonSheet } from './Bon'
 import { ConfirmDialog } from './ConfirmDialog'
 import { MeetingForm } from './MeetingForm'
 import { RatingPicker } from './Rating'
@@ -14,11 +16,23 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
   const [editing, setEditing] = useState(false)
   const [copying, setCopying] = useState(false)
   const [asking, setAsking] = useState(false)
+  const [bon, setBon] = useState(false)
+  const { meetings, companyName } = useData()
   if (editing) return <MeetingForm meeting={meeting} onClose={onClose} />
   if (copying) return <MeetingForm copyFrom={meeting} onClose={onClose} />
+  if (bon) return <BonSheet meeting={meeting} number={bonNumber(meetings, meeting)} company={companyName} onClose={() => setBon(false)} />
   return (
     <>
-    <Sheet title={meeting.title} onClose={onClose} actions={<>
+    <Sheet
+      title={meeting.title}
+      onClose={onClose}
+      headExtra={
+        <button type="button" className="close" aria-label={t.bon.open} onClick={() => setBon(true)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z" />
+          </svg>
+        </button>
+      } actions={<>
         <button
           className="btn danger"
           onClick={() => setAsking(true)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BonSheet } from './Bon'
 import { actions, useData } from '../data/store'
+import { bonNumber } from '../lib/bon'
 import type { LiveMeeting, Meeting } from '../data/types'
 import { costCents, formatDuration, formatEuro } from '../lib/money'
 import { PersonPicker } from './PersonPicker'
@@ -14,7 +15,7 @@ export function LiveCard() {
   const { live, meetings, companyName } = useData()
   const [bonId, setBonId] = useState<string | null>(null)
   const bon = bonId ? meetings.find((m) => m.id === bonId) : undefined
-  const sheet = bon && <BonSheet meeting={bon} number={meetings.length} company={companyName} onClose={() => setBonId(null)} />
+  const sheet = bon && <BonSheet meeting={bon} number={bonNumber(meetings, bon)} company={companyName} onClose={() => setBonId(null)} />
   if (!live) {
     return (
       <>

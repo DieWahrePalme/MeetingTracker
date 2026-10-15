@@ -14,7 +14,7 @@ const isTextField = (el: Element | null) =>
  * sichtbaren Bereich über der Tastatur und wird kompakt (ohne Buttons unten). Ohne aktives Textfeld
  * ist es immer voll hoch, so kann ein veralteter Wert von Safari nichts verstellen.
  */
-export function Sheet({ title, onClose, children, actions }: { title: string; onClose: () => void; children: ReactNode; actions?: ReactNode }) {
+export function Sheet({ title, onClose, children, actions, headExtra }: { title: string; onClose: () => void; children: ReactNode; actions?: ReactNode; headExtra?: ReactNode }) {
   const [typing, setTyping] = useState(false)
   const [vp, setVp] = useState<{ top: number; height: number } | null>(null)
 
@@ -87,6 +87,7 @@ export function Sheet({ title, onClose, children, actions }: { title: string; on
         <div className="grabber" aria-hidden="true" />
         <div className="sheet-head">
           <h2>{title}</h2>
+          {headExtra}
           <button type="button" className="close" aria-label={t.sheet.close} onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
