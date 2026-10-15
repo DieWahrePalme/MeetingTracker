@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Meeting } from '../data/types'
+import { funText } from '../lib/fun'
 import { clock, renderBonPng, shareBon } from '../lib/bon'
 import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, meetingCost, personSeconds } from '../lib/stats'
@@ -75,6 +76,7 @@ export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeti
             <span>{t.bon.sum}</span>
             <strong><CountUp value={meetingCost(meeting)} format={formatEuro} duration={1100} /></strong>
           </div>
+          {funText(meetingCost(meeting)) && <p className="fun-line">{t.bon.fun(funText(meetingCost(meeting)))}</p>}
           <div className="barcode" aria-hidden="true" />
           <p className="thanks">{t.bon.thanks}</p>
         </div>

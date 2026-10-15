@@ -3,6 +3,7 @@ import { useData } from '../data/store'
 import { suggestRecurring } from '../lib/recurring'
 import type { Suggestion } from '../lib/recurring'
 import type { Meeting } from '../data/types'
+import { AUTO, FUN_UNITS, UNIT_KEY, formatUnits, storedChoice, unitFor } from '../lib/fun'
 import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, matches, matchesRating, matchesSearch, meetingCost, noFilter, personSeconds, valueByRating } from '../lib/stats'
 import type { Filter, RatingFilter, RatingKey } from '../lib/stats'
@@ -16,14 +17,15 @@ import { Suggestions } from './Suggestions'
 
 const num = (v: string) => (v === '' ? null : Number(v))
 
-type Metric = 'cost' | 'time'
+type Metric = 'cost' | 'time' | 'fun'
 const METRIC_KEY = 'meetingtracker.metric'
 
 /** Anzeige: Kosten in Euro oder Zeit aller Teilnehmer. Die Wahl bleibt auf diesem Gerät gespeichert. */
 function useMetric(): [Metric, (m: Metric) => void] {
   const [metric, setMetric] = useState<Metric>(() => {
     try {
-      return localStorage.getItem(METRIC_KEY) === 'time' ? 'time' : 'cost'
+      const v = localStorage.getItem(METRIC_KEY)
+      return v === 'time' || v === 'fun' ? v : 'cost'
     } catch {
       return 'cost'
     }
@@ -45,9 +47,29 @@ function useMetric(): [Metric, (m: Metric) => void] {
   ]
 }
 
+/** Gewählte Spaß-Einheit (Döner, Hochregal, Maybach), bleibt auf diesem Gerät gespeichert. */
+function useFunUnit(): [string, (id: string) => void] {
+  const [id, setId] = useState(storedChoice)
+  return [
+    id,
+    (next) => {
+      setId(next)
+      try {
+        localStorage.setItem(UNIT_KEY, next)
+      } catch {
+        /* gilt nur für diese Sitzung */
+      }
+    },
+  ]
+}
+
+const METRICS = ['cost', 'time', 'fun'] as const
+
 export function Meetings() {
   const { meetings, hiddenSuggestions } = useData()
   const [metric, setMetric] = useMetric()
+  const [unitId, setUnitId] = useFunUnit()
+  const key = metric + unitId
   const [filter, setFilter] = useState<Filter>(noFilter)
   const [sort, setSort] = useState<'newest' | 'value'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
@@ -57,8 +79,9 @@ export function Meetings() {
   const [adding, setAdding] = useState(false)
   const [suggested, setSuggested] = useState<Suggestion | null>(null)
 
-  const valueOf = (m: Meeting) => (metric === 'cost' ? meetingCost(m) : personSeconds(m))
-  const fmt = (v: number) => (metric === 'cost' ? formatEuro(v) : formatDuration(v))
+  const valueOf = (m: Meeting) => (metric === 'time' ? personSeconds(m) : meetingCost(m))
+  // Formatierer für einen Zielwert: bei "automatisch" bleibt die Einheit während des Hochzählens gleich
+  const fmtFor = (target: number) => (v: number) => (metric === 'time' ? formatDuration(v) : metric === 'fun' ? formatUnits(v, unitFor(unitId, target)) : formatEuro(v))
   const sum = (ms: Meeting[]) => ms.reduce((s, m) => s + valueOf(m), 0)
 
   const inPeriod = meetings.filter((m) => matches(m, filter))
@@ -74,7 +97,8 @@ export function Meetings() {
   const years = [...new Set([new Date().getFullYear(), ...meetings.map((m) => new Date(m.startedAt).getFullYear())])].sort((a, b) => b - a)
   // Die große Zahl schrumpft, wenn sie länger wird als etwa "5.000,60 €", damit sie in eine Zeile passt.
   const heroValue = sum(meetings)
-  const heroText = fmt(heroValue)
+  const heroUnit = unitFor(unitId, heroValue)
+  const heroText = fmtFor(heroValue)(heroValue)
   const open = meetings.find((m) => m.id === openId)
   const suggestions = suggestRecurring(meetings, Date.now(), hiddenSuggestions)
 
@@ -84,32 +108,49 @@ export function Meetings() {
       <div className="col-side">
       <section className="hero">
         <div className="hero-top">
-          <p className="label">{metric === 'cost' ? t.total : t.totalTime}</p>
-          <button
-            className={'metric-switch' + (metric === 'time' ? ' time' : '')}
-            role="switch"
-            aria-checked={metric === 'time'}
-            aria-label={t.metric.label}
-            onClick={() => setMetric(metric === 'cost' ? 'time' : 'cost')}
-          >
+          <p className="label">{metric === 'cost' ? t.total : metric === 'time' ? t.totalTime : t.fun.total(heroUnit.many)}</p>
+          <div className="metric-switch" data-m={metric} role="radiogroup" aria-label={t.metric.label}>
             <span className="thumb" aria-hidden="true" />
-            <svg className="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M17.5 6.6A7 7 0 1 0 17.5 17.4M5 10h9M5 14h9" />
-            </svg>
-            <svg className="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7v5l3 2" />
-            </svg>
-          </button>
+            {METRICS.map((k) => (
+              <button key={k} className={'opt ' + k} role="radio" aria-checked={metric === k} aria-label={t.metric[k]} onClick={() => setMetric(k)}>
+                {k === 'cost' ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M17.5 6.6A7 7 0 1 0 17.5 17.4M5 10h9M5 14h9" />
+                  </svg>
+                ) : k === 'time' ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M8.5 14.5c1 1.4 2.2 2 3.5 2s2.5-.6 3.5-2M9 9.5h.01M15 9.5h.01" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="total" style={{ fontSize: `calc(clamp(2.5rem, 13vw, 3.8rem) * ${Math.min(1, 10 / heroText.length)})` }}>
-          <CountUp value={heroValue} format={fmt} resetKey={metric} />
+          <CountUp value={heroValue} format={fmtFor(heroValue)} resetKey={key} />
         </p>
         <p className="muted">
           {metric === 'cost'
             ? t.totalSub(meetings.length, formatDuration(meetings.reduce((s, m) => s + m.durationSec, 0)))
-            : t.totalSubTime(meetings.length)}
+            : metric === 'time'
+              ? t.totalSubTime(meetings.length)
+              : `${t.fun.also} ${FUN_UNITS.filter((u) => u.id !== heroUnit.id).map((u) => formatUnits(heroValue, u)).join(' · ')}`}
         </p>
+        {metric === 'fun' && (
+          <div className="chips unit-chips" role="radiogroup" aria-label={t.fun.unit}>
+            {[{ id: AUTO, one: t.fun.auto }, ...FUN_UNITS].map((u) => (
+              <button key={u.id} className={'chip' + (u.id === unitId ? ' on' : '')} role="radio" aria-checked={u.id === unitId} onClick={() => setUnitId(u.id)}>
+                {u.one}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <Suggestions items={suggestions} onCreate={setSuggested} />
@@ -122,8 +163,8 @@ export function Meetings() {
       {anyRated && (
         <section className="card split">
           <div className="line">
-            <small className="muted">{metric === 'cost' ? t.rating.badCost : t.rating.badTime}</small>
-            <strong className="mid bad"><CountUp value={split.down.value} format={fmt} resetKey={metric} /></strong>
+            <small className="muted">{metric === 'time' ? t.rating.badTime : t.rating.badCost}</small>
+            <strong className="mid bad"><CountUp value={split.down.value} format={fmtFor(split.down.value)} resetKey={key} /></strong>
           </div>
           <div className="stack-bar" role="img" aria-label={t.rating.split}>
             {(['up', 'neutral', 'down', 'none'] as RatingKey[]).map((k) =>
@@ -210,7 +251,7 @@ export function Meetings() {
           <div className="segment" role="group" aria-label={t.sort.title}>
             {(['newest', 'value'] as const).map((k) => (
               <button key={k} className={sort === k ? 'on' : ''} aria-pressed={sort === k} onClick={() => setSort(k)}>
-                {k === 'newest' ? t.sort.newest : metric === 'cost' ? t.sort.expensive : t.sort.longest}
+                {k === 'newest' ? t.sort.newest : metric === 'time' ? t.sort.longest : t.sort.expensive}
               </button>
             ))}
           </div>
@@ -221,7 +262,7 @@ export function Meetings() {
         <div className="line result-line">
           <div>
             <small className="muted">{t.filter.result}</small>
-            <strong className="mid"><CountUp value={sum(filtered)} format={fmt} resetKey={metric} duration={500} /></strong>
+            <strong className="mid"><CountUp value={sum(filtered)} format={fmtFor(sum(filtered))} resetKey={key} duration={500} /></strong>
           </div>
           <button
             className="link"
@@ -253,7 +294,7 @@ export function Meetings() {
                   </small>
                   <span className="bar"><i style={{ width: `${(valueOf(m) / max) * 100}%` }} /></span>
                 </div>
-                <strong className="cost"><CountUp value={valueOf(m)} format={fmt} resetKey={metric} duration={550} /></strong>
+                <strong className="cost"><CountUp value={valueOf(m)} format={fmtFor(valueOf(m))} resetKey={key} duration={550} /></strong>
               </button>
             </li>
           ))}

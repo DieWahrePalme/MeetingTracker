@@ -26,6 +26,7 @@
   --money-ink: #b93a05; /* Geld als Schrift/Symbol auf hellem Grund */
   --time-ink: #2038d1; /* Zeit als Schrift/Symbol */
   --accent-big: #d94a08; /* große Zahl, Modusfarbe (3,8:1) */
+  --fun-ink: #a21caf; /* Spaß als Schrift/Symbol (5,6:1) */
   --paper: #fbf8f1; /* Bon-Papier, in beiden Modi hell */
   --paper-ink: #14110f;
   --radius: 18px;
@@ -36,6 +37,7 @@
   color-scheme: light dark;
 }
 :root[data-metric='time'] { --accent: #2b4bff; --accent-ink: #2038d1; --accent-soft: #e1e6ff; --on-accent: #ffffff; --accent-big: #2b4bff; }
+:root[data-metric='fun'] { --accent: #d946ef; --accent-ink: #a21caf; --accent-soft: #fae8ff; --on-accent: #14110f; --accent-big: #c026d3; }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0e0d0c;
@@ -50,6 +52,7 @@
     --sel-fg: #0e0d0c;
     --money-ink: #ff9a66;
     --time-ink: #9db0ff;
+    --fun-ink: #f0abfc;
     --accent-big: #ff7a3d;
     --accent: #ff7a3d;
     --accent-ink: #ff9a66;
@@ -61,6 +64,7 @@
     --good: #4cd6a0;
     --neutral: #9aa3b2;
   }
+  :root[data-metric='fun'] { --accent: #e879f9; --accent-ink: #f0abfc; --accent-soft: rgba(232, 121, 249, 0.2); --on-accent: #0e0d0c; --accent-big: #e879f9; }
   :root[data-metric='time'] { --accent: #7088ff; --accent-ink: #9db0ff; --accent-soft: rgba(112, 136, 255, 0.22); --on-accent: #0e0d0c; --accent-big: #8ea2ff; }
 }
 
@@ -94,12 +98,6 @@ small { font-size: 0.8rem; }
 .actions > .btn.ghost { flex: 1 1 110px; }
 .actions > .live { flex: 1 1 100%; }
 .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.metric-switch { position: relative; flex: none; width: 88px; height: 44px; border: 0; border-radius: 99px; background: var(--fill); padding: 0; display: grid; grid-template-columns: 1fr 1fr; align-items: center; justify-items: center; color: var(--muted); }
-.metric-switch .ico { position: relative; z-index: 1; transition: color 0.2s; }
-.metric-switch .thumb { position: absolute; top: 3px; left: 3px; width: 40px; height: 38px; border-radius: 99px; background: var(--card); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.metric-switch.time .thumb { transform: translateX(42px); }
-.metric-switch:not(.time) .ico:first-of-type, .metric-switch.time .ico:last-of-type { color: var(--accent-ink); }
-.metric-switch:active .thumb { filter: brightness(0.96); }
 .searchbar { display: flex; gap: 10px; align-items: center; }
 .searchbar .input { flex: 1; min-width: 0; }
 .icon-btn { position: relative; flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--fill); color: var(--text); display: grid; place-items: center; }
@@ -345,12 +343,6 @@ select:disabled { opacity: 0.5; }
 .chip { border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line); background: transparent; }
 .chip.on { box-shadow: inset 0 0 0 2px var(--ink); background: var(--accent); color: var(--on-accent); }
 .chip.team { box-shadow: inset 0 0 0 1.5px var(--edge); }
-.metric-switch { background: transparent; border: 2px solid var(--edge); }
-.metric-switch .thumb { background: var(--accent); box-shadow: none; }
-.metric-switch .ico:first-of-type { color: var(--money-ink); }
-.metric-switch .ico:last-of-type { color: var(--time-ink); }
-.metric-switch .thumb { transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s; }
-.metric-switch:not(.time) .ico:first-of-type, .metric-switch.time .ico:last-of-type { color: var(--on-accent); }
 .topnav { border-bottom: 2px solid var(--edge); }
 .topnav button.on { border-bottom-color: var(--accent); color: var(--text); }
 .rate-btn { border-radius: 14px; border: 2px solid var(--line); background: transparent; }
@@ -434,3 +426,20 @@ select:disabled { opacity: 0.5; }
 .center-text { text-align: center; }
 .sheet-head .close + .close { margin-left: -4px; }
 .sheet-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* ===== Schalter Geld / Zeit / Spaß ===== */
+.metric-switch { position: relative; flex: none; width: 136px; height: 44px; border: 2px solid var(--edge); border-radius: 99px; background: transparent; display: grid; grid-template-columns: repeat(3, 1fr); }
+.metric-switch .thumb { position: absolute; top: 2px; left: 2px; width: 40px; height: 36px; border-radius: 99px; background: var(--accent); transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s; pointer-events: none; }
+.metric-switch[data-m='time'] .thumb { transform: translateX(44px); }
+.metric-switch[data-m='fun'] .thumb { transform: translateX(88px); }
+.metric-switch .opt { position: relative; z-index: 1; display: grid; place-items: center; border: 0; background: none; padding: 0; border-radius: 99px; transition: color 0.2s; }
+.metric-switch .opt.cost { color: var(--money-ink); }
+.metric-switch .opt.time { color: var(--time-ink); }
+.metric-switch .opt.fun { color: var(--fun-ink); }
+.metric-switch .opt[aria-checked='true'] { color: var(--on-accent); }
+.unit-chips { margin-top: 4px; }
+
+/* Rückfrage-Dialog: nichts dahinter erreichbar */
+.dialog-overlay { overscroll-behavior: contain; }
+
+.bon .fun-line { margin-top: 10px; text-align: center; font-weight: 700; font-size: 0.8rem; }

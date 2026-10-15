@@ -16,7 +16,14 @@ export const t = {
   total: 'Gesamtkosten',
   totalTime: 'Personenstunden',
   totalSubTime: (n: number) => `${n} ${n === 1 ? 'Meeting' : 'Meetings'} · Std:Min:Sek`,
-  metric: { label: 'Zeit statt Kosten anzeigen', cost: 'Kosten', time: 'Zeit' },
+  metric: { label: 'Anzeige', cost: 'Kosten in Euro', time: 'Zeit', fun: 'Spaß' },
+  fun: {
+    total: (unit: string) => `Gesamtkosten in ${unit}`,
+    sub: (n: number) => `${n} ${n === 1 ? 'Meeting' : 'Meetings'} · umgerechnet in Spaß-Einheiten`,
+    unit: 'Einheit wählen',
+    auto: 'Automatisch',
+    also: 'Das sind auch',
+  },
   totalSub: (n: number, time: string) => `${n} ${n === 1 ? 'Meeting' : 'Meetings'} · ${time} Std.`,
   filter: {
     title: 'Filter',
@@ -95,6 +102,7 @@ export const t = {
     rating: 'Bewertung',
     stamp: 'GESTOPPT',
     thanks: 'Zeit ist Geld. Das hier war beides.',
+    fun: (x: string) => `Das sind ${x}.`,
     done: 'Fertig',
     share: 'Teilen',
     open: 'Bon anzeigen',

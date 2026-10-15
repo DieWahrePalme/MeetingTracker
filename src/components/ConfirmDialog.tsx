@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { t } from '../texts'
 
 /**
@@ -7,20 +8,31 @@ import { t } from '../texts'
  */
 export function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: { message: string; confirmLabel: string; onConfirm: () => void; onCancel: () => void }) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  // Die Rückfrage-Funktion in einer Ref halten, damit der Effekt nicht bei jedem Neuzeichnen (Live-Timer!) neu startet
+  const cancel = useRef(onCancel)
+  cancel.current = onCancel
 
   useEffect(() => {
+    const before = document.activeElement as HTMLElement | null
+    // Alles dahinter sperren: kein Klick, kein Tab, kein Screenreader erreicht die Seite darunter
+    const root = document.getElementById('root')
+    root?.setAttribute('inert', '')
     cancelRef.current?.focus()
     // Im Capture-Schritt, damit Escape nicht zusätzlich das Fenster dahinter schließt
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       e.stopPropagation()
-      onCancel()
+      cancel.current()
     }
     window.addEventListener('keydown', onKey, true)
-    return () => window.removeEventListener('keydown', onKey, true)
-  }, [onCancel])
+    return () => {
+      window.removeEventListener('keydown', onKey, true)
+      root?.removeAttribute('inert')
+      before?.focus?.()
+    }
+  }, [])
 
-  return (
+  return createPortal(
     <div className="dialog-overlay" onClick={onCancel}>
       <div className="dialog" role="alertdialog" aria-modal="true" aria-label={message} onClick={(e) => e.stopPropagation()}>
         <p className="dialog-text">{message}</p>
@@ -29,6 +41,7 @@ export function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: { 
           <button className="btn danger" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

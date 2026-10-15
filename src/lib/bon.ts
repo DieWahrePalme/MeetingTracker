@@ -1,6 +1,7 @@
 import type { Meeting } from '../data/types'
 import { formatDuration, formatEuro } from './money'
 import { headCount, meetingCost, personSeconds } from './stats'
+import { funText } from './fun'
 import { t } from '../texts'
 
 export const clock = (ms: number) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -156,6 +157,12 @@ function draw(ctx: CanvasRenderingContext2D, m: Meeting, number: number, company
   text(t.bon.sum, left, y, `14px ${MONO}`)
   text(formatEuro(meetingCost(m)), right, y, `700 32px ${NUM}`, 'right', 1, -1)
   y += 20
+  const fun = funText(meetingCost(m))
+  if (fun) {
+    y += 6
+    text(t.bon.fun(fun), MARGIN + W / 2, y, `700 13px ${MONO}`, 'center', 0.85)
+    y += 6
+  }
 
   // Strichcode
   if (paint) {
