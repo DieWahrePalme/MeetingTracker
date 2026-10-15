@@ -13,7 +13,7 @@ import { Sheet } from './Sheet'
 
 function PersonForm({ person, onClose }: { person?: Person; onClose: () => void }) {
   const [name, setName] = useState(person?.name ?? '')
-  const [rate, setRate] = useState(person ? String(person.rateCents / 100).replace('.', ',') : '')
+  const [rate, setRate] = useState(person ? (person.rateCents % 100 === 0 ? String(person.rateCents / 100) : (person.rateCents / 100).toFixed(2).replace('.', ',')) : '')
   const [tried, setTried] = useState(false)
   const [asking, setAsking] = useState(false)
   const [archived, setArchived] = useState(person?.archived ?? false)

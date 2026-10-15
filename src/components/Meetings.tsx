@@ -65,6 +65,9 @@ function useFunUnit(): [string, (id: string) => void] {
 
 const METRICS = ['cost', 'time', 'fun'] as const
 
+/** Preis je Einheit fürs Menü: "8,50 €", "1.200 €" */
+const priceText = (cents: number) => (cents % 100 === 0 ? `${(cents / 100).toLocaleString('de-DE')} €` : formatEuro(cents))
+
 export function Meetings() {
   const { meetings, hiddenSuggestions } = useData()
   const [metric, setMetric] = useMetric()
@@ -138,7 +141,7 @@ export function Meetings() {
             {METRICS.map((k) => (
               <button key={k} className={'opt ' + k} role="radio" aria-checked={metric === k} aria-label={t.metric[k]}
                 onClick={() => onMetricClick(k)}
-                {...(k === 'fun' ? { onPointerDown: startPress, onPointerUp: endPress, onPointerLeave: endPress, onPointerCancel: endPress, onContextMenu: (e: React.MouseEvent) => e.preventDefault(), 'aria-haspopup': 'menu' as const, 'aria-expanded': menuOpen } : {})}
+                {...(k === 'fun' ? { onPointerDown: startPress, onPointerUp: endPress, onPointerLeave: endPress, onPointerCancel: endPress, onContextMenu: (e: React.MouseEvent) => e.preventDefault() } : {})}
               >
                 {k === 'cost' ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -172,7 +175,7 @@ export function Meetings() {
                       setMenuOpen(false)
                     }}
                   >
-                    <span>{u.one}</span>
+                    <span>{u.one}{'cents' in u && ` (${priceText(u.cents)})`}</span>
                     {u.id === unitId && <span aria-hidden="true">✓</span>}
                   </button>
                 ))}
@@ -202,7 +205,7 @@ export function Meetings() {
       {anyRated && (
         <section className="card split">
           <div className="line">
-            <small className="muted">{metric === 'time' ? t.rating.badTime : t.rating.badCost}</small>
+            <small className="muted">{metric === 'time' ? t.rating.badTime : metric === 'fun' ? t.rating.badFun : t.rating.badCost}</small>
             <strong className="mid bad"><CountUp value={split.down.value} format={fmtFor(split.down.value)} resetKey={key} /></strong>
           </div>
           <div className="stack-bar" role="img" aria-label={t.rating.split}>
@@ -317,7 +320,7 @@ export function Meetings() {
       )}
 
       {list.length === 0 ? (
-        <p className="muted empty">{meetings.length === 0 ? t.list.empty : t.list.emptyFiltered}</p>
+        <p className="muted empty">{meetings.length === 0 ? t.list.empty : search.trim() ? t.list.noHits : t.list.emptyFiltered}</p>
       ) : (
         <ul className="plain list meeting-list">
           {list.map((m) => (

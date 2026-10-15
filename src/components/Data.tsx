@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { actions, useData } from '../data/store'
+import { actions, parseData, useData } from '../data/store'
 import { t } from '../texts'
 import { ConfirmDialog } from './ConfirmDialog'
 
@@ -7,7 +7,7 @@ import { ConfirmDialog } from './ConfirmDialog'
 export function Data() {
   const data = useData()
   const [msg, setMsg] = useState('')
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingText, setPendingText] = useState<string | null>(null)
   const [clearing, setClearing] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -20,9 +20,20 @@ export function Data() {
     URL.revokeObjectURL(url)
   }
 
-  async function onImport(file: File) {
+  // Erst die Datei prüfen, dann erst nach dem Ersetzen fragen
+  async function onPick(file: File) {
+    setMsg('')
     try {
-      actions.importJson(await file.text())
+      const text = await file.text()
+      parseData(JSON.parse(text))
+      setPendingText(text)
+    } catch {
+      setMsg(t.data.importFail)
+    }
+  }
+  function doImport(text: string) {
+    try {
+      actions.importJson(text)
       setMsg(t.data.importOk)
     } catch {
       setMsg(t.data.importFail)
@@ -49,7 +60,7 @@ export function Data() {
           onChange={(e) => {
             const f = e.target.files?.[0]
             e.target.value = ''
-            if (f) setPendingFile(f)
+            if (f) void onPick(f)
           }}
         />
         {msg && <p className="muted" role="status">{msg}</p>}
@@ -63,15 +74,15 @@ export function Data() {
         <button className="btn danger" onClick={() => setClearing(true)}>{t.data.clear}</button>
       </section>
 
-      {pendingFile && (
+      {pendingText !== null && (
         <ConfirmDialog
           message={t.data.importConfirm}
           confirmLabel={t.confirm.import}
-          onCancel={() => setPendingFile(null)}
+          onCancel={() => setPendingText(null)}
           onConfirm={() => {
-            const f = pendingFile
-            setPendingFile(null)
-            void onImport(f)
+            const text = pendingText
+            setPendingText(null)
+            doImport(text)
           }}
         />
       )}
