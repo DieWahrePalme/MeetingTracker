@@ -1,5 +1,5 @@
 import type { FlatGroup } from '../data/types'
-import { parseEuroToCents } from '../lib/money'
+import { MAX_RATE_CENTS, parseEuroToCents } from '../lib/money'
 import { t } from '../texts'
 
 /** Rohtexte der beiden Felder; daraus wird bei Bedarf die Pauschale berechnet. */
@@ -20,12 +20,14 @@ const countOf = (g: GroupInput) => Math.max(0, Math.floor(Number(g.count) || 0))
 export function inputToGroup(g: GroupInput): FlatGroup | null {
   const count = countOf(g)
   const rateCents = parseEuroToCents(g.rate)
-  return count > 0 && rateCents !== null ? { count, rateCents } : null
+  return count > 0 && rateCents !== null && rateCents <= MAX_RATE_CENTS ? { count, rateCents } : null
 }
 
 /** Fehlertext, wenn eine Anzahl > 0 ohne gültigen Satz eingegeben wurde. */
 export function groupError(g: GroupInput): string {
-  return countOf(g) > 0 && parseEuroToCents(g.rate) === null ? t.group.errRate : ''
+  if (countOf(g) === 0) return ''
+  const cents = parseEuroToCents(g.rate)
+  return cents === null ? t.group.errRate : cents > MAX_RATE_CENTS ? t.group.errRateMax : ''
 }
 
 export function GroupFields({ value, onChange }: { value: GroupInput; onChange: (v: GroupInput) => void }) {

@@ -28,6 +28,7 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
   const [ids, setIds] = useState<string[]>(src?.participants.map((p) => p.personId) ?? [])
   const [group, setGroup] = useState(groupToInput(src?.group))
   const [rating, setRating] = useState<Rating | undefined>(meeting?.rating)
+  const [tried, setTried] = useState(false)
   const [more, setMore] = useState(!!src?.group || !!meeting?.rating)
 
   // Zuletzt genutzte zuerst; archivierte nur, wenn sie schon im Meeting sind; gelöschte Personen aus dem Meeting bleiben wählbar.
@@ -41,7 +42,7 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
     durationSec <= 0 ? t.form.errDuration : groupError(group) || (ids.length === 0 && !flat ? t.form.errPeople : '')
 
   function save() {
-    if (error) return
+    if (error) return setTried(true)
     let startedAt = meeting?.startedAt ?? Date.now()
     if (date !== initialDate || !meeting) {
       const [y, mo, d] = date.split('-').map(Number)
@@ -54,7 +55,7 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
   return (
     <Sheet title={heading ?? (meeting ? t.form.editTitle : copyFrom ? t.form.copyTitle : t.form.newTitle)} onClose={onClose} actions={<>
         <button className="btn ghost" onClick={onClose}>{t.form.cancel}</button>
-        <button className="btn primary" disabled={!!error} onClick={save}>{t.form.save}</button>
+        <button className="btn primary" aria-disabled={!!error} onClick={save}>{t.form.save}</button>
       </>}>
       <div className="form-list">
         <div className="form-row">
@@ -101,7 +102,7 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
           </>
         )}
       </div>
-      {error && <p className="error">{error}</p>}
+      {(tried ? error : groupError(group)) && <p className="error" role="alert">{tried ? error : groupError(group)}</p>}
     </Sheet>
   )
 }

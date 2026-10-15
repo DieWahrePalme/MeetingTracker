@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { actions, useData } from '../data/store'
 import type { Person, Team } from '../data/types'
-import { centsToInput, formatEuro, formatHours, parseEuroToCents } from '../lib/money'
+import { MAX_RATE_CENTS, centsToInput, formatEuro, formatHours, parseEuroToCents } from '../lib/money'
 import { NOMINAL_HOURS, PRODUCTIVE_HOURS, suggestedRateCents } from '../lib/salary'
 import { norm } from '../lib/people'
 import { personScores } from '../lib/stats'
 import { t } from '../texts'
+import { ConfirmDialog } from './ConfirmDialog'
 import { PersonPicker } from './PersonPicker'
 import { RatingIcon } from './Rating'
 import { Sheet } from './Sheet'
@@ -14,6 +15,7 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
   const [name, setName] = useState(person?.name ?? '')
   const [rate, setRate] = useState(person ? String(person.rateCents / 100).replace('.', ',') : '')
   const [tried, setTried] = useState(false)
+  const [asking, setAsking] = useState(false)
   const [archived, setArchived] = useState(person?.archived ?? false)
   const [calcOpen, setCalcOpen] = useState(false)
   const [salary, setSalary] = useState('')
@@ -35,18 +37,14 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
   }
   const cents = parseEuroToCents(rate)
   const nameErr = !name.trim() ? t.people.errName : ''
-  const rateErr = cents === null ? t.people.errRate : ''
+  const rateErr = cents === null ? t.people.errRate : cents > MAX_RATE_CENTS ? t.people.errRateMax : ''
   return (
+    <>
     <Sheet title={person ? t.people.editTitle : t.people.newTitle} onClose={onClose} actions={<>
         {person && (
           <button
             className="btn danger"
-            onClick={() => {
-              if (confirm(t.people.confirmDelete)) {
-                actions.deletePerson(person.id)
-                onClose()
-              }
-            }}
+            onClick={() => setAsking(true)}
           >
             {t.people.delete}
           </button>
@@ -55,7 +53,7 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
         <button
           className="btn primary"
           onClick={() => {
-            if (nameErr || cents === null) return setTried(true)
+            if (nameErr || rateErr || cents === null) return setTried(true)
             actions.savePerson({ id: person?.id, name: name.trim(), rateCents: cents, archived })
             onClose()
           }}
@@ -147,6 +145,18 @@ function PersonForm({ person, onClose }: { person?: Person; onClose: () => void 
       )}
       {person && <p className="muted">{t.people.archivedNote}</p>}
     </Sheet>
+    {asking && person && (
+      <ConfirmDialog
+        message={t.people.confirmDelete}
+        confirmLabel={t.confirm.delete}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => {
+          actions.deletePerson(person.id)
+          onClose()
+        }}
+      />
+    )}
+    </>
   )
 }
 
@@ -157,6 +167,7 @@ function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
   const [name, setName] = useState(team?.name ?? '')
   const [ids, setIds] = useState<string[]>(team?.personIds ?? [])
   const [tried, setTried] = useState(false)
+  const [asking, setAsking] = useState(false)
   // Nur aktive Personen, alphabetisch (hier zählt nicht die letzte Nutzung)
   const options = people
     .filter((p) => !p.archived)
@@ -165,6 +176,7 @@ function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
   const nameErr = name.trim() ? '' : t.people.team.errName
   const membersErr = ids.length > 0 ? '' : t.people.team.errMembers
   return (
+    <>
     <Sheet
       title={team ? t.people.team.editTitle : t.people.team.newTitle}
       onClose={onClose}
@@ -173,12 +185,7 @@ function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
           {team && (
             <button
               className="btn danger"
-              onClick={() => {
-                if (confirm(t.people.team.confirmDelete)) {
-                  actions.deleteTeam(team.id)
-                  onClose()
-                }
-              }}
+              onClick={() => setAsking(true)}
             >
               {t.people.team.delete}
             </button>
@@ -208,6 +215,18 @@ function TeamForm({ team, onClose }: { team?: Team; onClose: () => void }) {
         {tried && membersErr && <small className="error" role="alert">{membersErr}</small>}
       </div>
     </Sheet>
+    {asking && team && (
+      <ConfirmDialog
+        message={t.people.team.confirmDelete}
+        confirmLabel={t.confirm.delete}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => {
+          actions.deleteTeam(team.id)
+          onClose()
+        }}
+      />
+    )}
+    </>
   )
 }
 

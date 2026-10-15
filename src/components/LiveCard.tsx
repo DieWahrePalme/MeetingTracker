@@ -8,6 +8,7 @@ import { RatingPicker } from './Rating'
 import { pickOptions } from '../lib/people'
 import { GroupFields, groupError, groupToInput, inputToGroup } from './GroupFields'
 import { t } from '../texts'
+import { ConfirmDialog } from './ConfirmDialog'
 
 export function LiveCard() {
   const { live, meetings, companyName } = useData()
@@ -37,6 +38,9 @@ function LiveRunning({ live, onStopped }: { live: LiveMeeting; onStopped: (m: Me
   const { people, teams, meetings } = useData()
   const [now, setNow] = useState(Date.now())
   const [group, setGroup] = useState(() => groupToInput(live.group))
+  const [asking, setAsking] = useState(false)
+  const [tried, setTried] = useState(false)
+  const [more, setMore] = useState(!!live.group || !!live.rating)
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250)
     return () => clearInterval(id)
@@ -47,14 +51,18 @@ function LiveRunning({ live, onStopped }: { live: LiveMeeting; onStopped: (m: Me
   const cents =
     people.filter((p) => live.personIds.includes(p.id)).reduce((sum, p) => sum + costCents(p.rateCents, seconds), 0) +
     (flat ? costCents(flat.count * flat.rateCents, seconds) : 0)
+  const hasPeople = live.personIds.length > 0 || !!flat
+  const showMore = more || !!groupError(group)
+  const summary = [flat && t.form.moreGroup(flat.count), live.rating && t.rating[live.rating]].filter(Boolean).join(' · ')
   return (
+    <>
     <section className="card live">
       <div className="live-top">
         <span className="pill">{t.live.running}</span>
         <button
           className="icon-btn trash"
           aria-label={t.live.cancel}
-          onClick={() => confirm(t.live.confirmCancel) && actions.cancelLive()}
+          onClick={() => setAsking(true)}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
@@ -70,6 +78,7 @@ function LiveRunning({ live, onStopped }: { live: LiveMeeting; onStopped: (m: Me
           className="btn primary stop"
           aria-label={t.live.stopLabel}
           onClick={() => {
+            if (!hasPeople) return setTried(true)
             const m = actions.stopLive()
             if (m) onStopped(m)
           }}
@@ -80,6 +89,7 @@ function LiveRunning({ live, onStopped }: { live: LiveMeeting; onStopped: (m: Me
           {t.live.stop}
         </button>
       </div>
+      {tried && !hasPeople && <p className="error" role="alert">{t.live.errPeople}</p>}
       <input
         className="input"
         value={live.title}
@@ -97,15 +107,37 @@ function LiveRunning({ live, onStopped }: { live: LiveMeeting; onStopped: (m: Me
           teams={teams}
         />
       )}
-      <GroupFields
-        value={group}
-        onChange={(v) => {
-          setGroup(v)
-          actions.updateLive({ group: inputToGroup(v) })
-        }}
-      />
-      {groupError(group) && <p className="error">{groupError(group)}</p>}
-      <RatingPicker value={live.rating} onChange={(r) => actions.updateLive({ rating: r ?? null })} />
+      <div className="more">
+        <button type="button" className="disclosure" aria-expanded={showMore} onClick={() => setMore(!more)}>
+          <span>{t.live.more}</span>
+          {summary && <span className="badge">{summary}</span>}
+          <svg className="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {showMore && (
+          <>
+            <GroupFields
+              value={group}
+              onChange={(v) => {
+                setGroup(v)
+                actions.updateLive({ group: inputToGroup(v) })
+              }}
+            />
+            {groupError(group) && <p className="error">{groupError(group)}</p>}
+            <RatingPicker value={live.rating} onChange={(r) => actions.updateLive({ rating: r ?? null })} />
+          </>
+        )}
+      </div>
     </section>
+    {asking && (
+      <ConfirmDialog
+        message={t.live.confirmCancel}
+        confirmLabel={t.confirm.discard}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => actions.cancelLive()}
+      />
+    )}
+    </>
   )
 }

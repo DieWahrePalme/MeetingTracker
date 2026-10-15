@@ -5,6 +5,7 @@ import { costCents, formatDuration, formatEuro } from '../lib/money'
 import { groupCost, headCount, meetingCost, personSeconds } from '../lib/stats'
 import { t } from '../texts'
 import { CountUp } from './CountUp'
+import { ConfirmDialog } from './ConfirmDialog'
 import { MeetingForm } from './MeetingForm'
 import { RatingPicker } from './Rating'
 import { Sheet } from './Sheet'
@@ -12,18 +13,15 @@ import { Sheet } from './Sheet'
 export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => void }) {
   const [editing, setEditing] = useState(false)
   const [copying, setCopying] = useState(false)
+  const [asking, setAsking] = useState(false)
   if (editing) return <MeetingForm meeting={meeting} onClose={onClose} />
   if (copying) return <MeetingForm copyFrom={meeting} onClose={onClose} />
   return (
+    <>
     <Sheet title={meeting.title} onClose={onClose} actions={<>
         <button
           className="btn danger"
-          onClick={() => {
-            if (confirm(t.detail.confirmDelete)) {
-              actions.deleteMeeting(meeting.id)
-              onClose()
-            }
-          }}
+          onClick={() => setAsking(true)}
         >
           {t.detail.delete}
         </button>
@@ -63,5 +61,17 @@ export function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose:
       </div>
       <RatingPicker value={meeting.rating} onChange={(r) => actions.setRating(meeting.id, r ?? null)} />
     </Sheet>
+    {asking && (
+      <ConfirmDialog
+        message={t.detail.confirmDelete}
+        confirmLabel={t.confirm.delete}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => {
+          actions.deleteMeeting(meeting.id)
+          onClose()
+        }}
+      />
+    )}
+    </>
   )
 }

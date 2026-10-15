@@ -80,6 +80,8 @@ export function Meetings() {
 
   return (
     <>
+      <div className="cols">
+      <div className="col-side">
       <section className="hero">
         <div className="hero-top">
           <p className="label">{metric === 'cost' ? t.total : t.totalTime}</p>
@@ -139,7 +141,9 @@ export function Meetings() {
           </ul>
         </section>
       )}
+      </div>
 
+      <div className="col-main">
       <div className="searchbar">
         <input
           type="search"
@@ -255,6 +259,8 @@ export function Meetings() {
           ))}
         </ul>
       )}
+      </div>
+      </div>
 
       {adding && <MeetingForm onClose={() => setAdding(false)} />}
       {suggested && (

@@ -16,6 +16,9 @@ export function formatEuro(cents: number): string {
   return `${sign}${intFormat.format(euros)},${rest} €`
 }
 
+/** Obergrenze für einen Stundensatz (1.000 €), schützt vor Tippfehlern wie 1234567. */
+export const MAX_RATE_CENTS = 100_000
+
 /** "30", "30,5", "1.234,56", "30.50" -> Cent, sonst null */
 export function parseEuroToCents(text: string): number | null {
   let t = text.replace(/\/\s*h|pro\s*stunde|euro|eur/gi, '').replace(/[\s€]/g, '')

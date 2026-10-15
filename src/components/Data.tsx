@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react'
 import { actions, useData } from '../data/store'
 import { t } from '../texts'
+import { ConfirmDialog } from './ConfirmDialog'
 
 /** Reiter "Daten": Unternehmen, Sicherung (Export/Import), Demo und Löschen. */
 export function Data() {
   const data = useData()
   const [msg, setMsg] = useState('')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [clearing, setClearing] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function download() {
@@ -18,7 +21,6 @@ export function Data() {
   }
 
   async function onImport(file: File) {
-    if (!confirm(t.data.importConfirm)) return
     try {
       actions.importJson(await file.text())
       setMsg(t.data.importOk)
@@ -47,7 +49,7 @@ export function Data() {
           onChange={(e) => {
             const f = e.target.files?.[0]
             e.target.value = ''
-            if (f) void onImport(f)
+            if (f) setPendingFile(f)
           }}
         />
         {msg && <p className="muted" role="status">{msg}</p>}
@@ -58,8 +60,32 @@ export function Data() {
         {data.people.length === 0 && data.meetings.length === 0 && (
           <button className="btn ghost" onClick={actions.loadDemo}>{t.data.demo}</button>
         )}
-        <button className="btn danger" onClick={() => confirm(t.data.clearConfirm) && actions.clearAll()}>{t.data.clear}</button>
+        <button className="btn danger" onClick={() => setClearing(true)}>{t.data.clear}</button>
       </section>
+
+      {pendingFile && (
+        <ConfirmDialog
+          message={t.data.importConfirm}
+          confirmLabel={t.confirm.import}
+          onCancel={() => setPendingFile(null)}
+          onConfirm={() => {
+            const f = pendingFile
+            setPendingFile(null)
+            void onImport(f)
+          }}
+        />
+      )}
+      {clearing && (
+        <ConfirmDialog
+          message={t.data.clearConfirm}
+          confirmLabel={t.confirm.clearAll}
+          onCancel={() => setClearing(false)}
+          onConfirm={() => {
+            setClearing(false)
+            actions.clearAll()
+          }}
+        />
+      )}
     </>
   )
 }

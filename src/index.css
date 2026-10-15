@@ -111,6 +111,7 @@ small { font-size: 0.8rem; }
 .card { background: var(--card); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow); }
 .card h2 { font-size: 1.05rem; }
 .live { align-items: flex-start; }
+.live .more { width: 100%; }
 .timer { font-size: 3.2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1.05; }
 .pill { background: var(--accent-soft); color: var(--accent-ink); font-size: 0.8rem; font-weight: 600; padding: 4px 11px; border-radius: 99px; }
 .pill::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; animation: pulse 1.4s ease-in-out infinite; }
@@ -123,7 +124,8 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
 .btn { min-height: 52px; padding: 0 22px; border-radius: 99px; border: 0; font-weight: 600; background: var(--fill); color: var(--text); transition: transform 0.12s, opacity 0.12s, background 0.12s; }
 .btn:active { transform: scale(0.98); opacity: 0.75; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:disabled, .btn[aria-disabled='true'] { opacity: 0.4; }
+.btn:disabled { cursor: not-allowed; }
 .btn.primary { background: var(--accent); color: var(--on-accent); }
 .btn.ghost { background: var(--fill); color: var(--text); }
 .btn.danger { background: var(--danger-soft); color: var(--danger-ink); }
@@ -164,9 +166,7 @@ select:disabled { opacity: 0.5; }
 .filters label { display: flex; flex-direction: column; gap: 6px; }
 .filters select { padding: 0 8px; }
 .result { border-top: 0.5px solid var(--line); padding: 12px 0; }
-.chips.rating-filter { flex-wrap: nowrap; overflow-x: auto; margin-left: -18px; margin-right: -18px; padding: 0 18px 2px; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding-left: 18px; }
-.chips.rating-filter::-webkit-scrollbar { display: none; }
-.rating-filter .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; scroll-snap-align: start; }
+.rating-filter .chip { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; }
 .rating-filter .chip.on .rating-icon { color: var(--on-accent); }
 
 /* Gruppierte Listen: eine Fläche, feine Trennlinien */
@@ -333,7 +333,7 @@ select:disabled { opacity: 0.5; }
 .btn.primary { border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
 .btn.primary:active { box-shadow: 0 1px 0 var(--ink); }
 .btn.ghost, .btn.danger { background: var(--card); }
-.btn:disabled { box-shadow: none; }
+.btn:disabled, .btn[aria-disabled='true'] { box-shadow: none; }
 .card, .list { border: 1.5px solid var(--line); }
 .list > li + li { border-top: 1.5px dashed var(--line); }
 .detail-list { border: 0; background: transparent; border-top: 2px solid var(--edge); border-bottom: 2px solid var(--edge); border-radius: 0; }
@@ -405,3 +405,28 @@ select:disabled { opacity: 0.5; }
 .hero .label { color: var(--accent-ink); font-weight: 600; transition: color 0.3s; }
 .row-item .cost { color: var(--accent-ink); }
 .bar i { transition: width 0.4s ease, background-color 0.3s; }
+
+/* ===== Rückfrage-Dialog (ersetzt die Browser-Popups) ===== */
+.dialog-overlay { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8, 10, 16, 0.5); touch-action: none; animation: fade 0.15s ease; }
+.dialog { width: 100%; max-width: 360px; background: var(--card); border: 2px solid var(--edge); border-radius: 22px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 18px; animation: up 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.dialog-text { font-size: 1.05rem; font-weight: 600; line-height: 1.35; }
+.dialog-actions { display: flex; gap: 10px; }
+.dialog-actions .btn { flex: 1 1 0; padding: 0 12px; }
+
+/* ===== Meetings: eine Spalte am Handy, zwei Spalten am großen Bildschirm ===== */
+.cols, .col-side, .col-main { display: flex; flex-direction: column; gap: 20px; }
+
+/* ===== Große Bildschirme: Fenster als zentrierter Dialog ===== */
+@media (min-width: 700px) {
+  .overlay { align-items: center; padding: 32px; }
+  .sheet { border: 2px solid var(--edge); border-radius: 26px; max-height: min(88dvh, 820px); }
+  .grabber { display: none; }
+  .sheet-head { padding-top: 18px; }
+}
+@media (min-width: 1000px) {
+  .app.wide { max-width: 1120px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
+  .col-side { order: 2; position: sticky; top: 16px; }
+  .col-main { order: 1; }
+  .app.wide .hero { padding-top: 4px; }
+}
