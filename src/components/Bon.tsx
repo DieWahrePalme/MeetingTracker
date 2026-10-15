@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Meeting } from '../data/types'
-import { funText } from '../lib/fun'
+import { funMode, funText } from '../lib/fun'
 import { clock, renderBonPng, shareBon } from '../lib/bon'
 import { formatDuration, formatEuro } from '../lib/money'
 import { headCount, meetingCost, personSeconds } from '../lib/stats'
@@ -11,6 +11,7 @@ import { Sheet } from './Sheet'
 
 /** Meeting-Bon nach dem Stoppen: Zeitstempel, Dauer, Personen, Summe, Stempel. */
 export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeting; number: number; company: string; onClose: () => void }) {
+  const fun = funMode() ? funText(meetingCost(meeting)) : ''
   const end = meeting.startedAt + meeting.durationSec * 1000
   const [png, setPng] = useState<Blob | null>(null)
   const [failed, setFailed] = useState(false)
@@ -32,7 +33,7 @@ export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeti
   }
   return (
     <Sheet
-      title={t.bon.sheetTitle}
+      title={meeting.manual ? t.bon.sheetTitleManual : t.bon.sheetTitle}
       onClose={onClose}
       actions={
         <>
@@ -54,13 +55,13 @@ export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeti
           <div className="b-head">
             <p className="b-title">{meeting.title}</p>
             <div className="stamp" aria-hidden="true">
-              {t.bon.stamp}
-              <small>{clock(end)}</small>
+              {meeting.manual ? t.bon.stampManual : t.bon.stamp}
+              {!meeting.manual && <small>{clock(end)}</small>}
             </div>
           </div>
           <div className="b-row"><span>{t.bon.date}</span><span>{new Date(meeting.startedAt).toLocaleDateString('de-DE')}</span></div>
-          <div className="b-row"><span>{t.bon.start}</span><span>{clock(meeting.startedAt)}</span></div>
-          <div className="b-row"><span>{t.bon.end}</span><span>{clock(end)}</span></div>
+          {(!meeting.manual || meeting.startSet) && <div className="b-row"><span>{t.bon.start}</span><span>{clock(meeting.startedAt)}</span></div>}
+          {!meeting.manual && <div className="b-row"><span>{t.bon.end}</span><span>{clock(end)}</span></div>}
           <div className="b-row"><span>{t.bon.duration}</span><span>{formatDuration(meeting.durationSec)}</span></div>
           <hr />
           <div className="b-row"><span>{t.bon.people}</span><span>{headCount(meeting)}</span></div>
@@ -76,7 +77,7 @@ export function BonSheet({ meeting, number, company, onClose }: { meeting: Meeti
             <span>{t.bon.sum}</span>
             <strong><CountUp value={meetingCost(meeting)} format={formatEuro} duration={1100} /></strong>
           </div>
-          {funText(meetingCost(meeting)) && <p className="fun-line">{t.bon.fun(funText(meetingCost(meeting)))}</p>}
+          {fun && <p className="fun-line">{t.bon.fun(fun)}</p>}
           <div className="barcode" aria-hidden="true" />
           <p className="thanks">{t.bon.thanks}</p>
         </div>

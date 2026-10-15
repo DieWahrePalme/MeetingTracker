@@ -56,7 +56,10 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
       const [hh, mi] = (time || '12:00').split(':').map(Number)
       startedAt = new Date(y, mo - 1, d, hh, mi).getTime()
     }
-    actions.saveMeeting({ id: meeting?.id, title: title.trim() || 'Meeting', startedAt, durationSec, personIds: ids, group: flat, rating })
+    // Nachgetragen = nicht live gestoppt; der Beginn zählt nur, wenn er selbst eingegeben wurde
+    const manual = meeting ? !!meeting.manual : true
+    const startSet = !!meeting?.startSet || time !== initialTime || date !== initialDate
+    actions.saveMeeting({ id: meeting?.id, title: title.trim() || 'Meeting', startedAt, durationSec, personIds: ids, group: flat, rating, manual, startSet })
     onClose()
   }
 

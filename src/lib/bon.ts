@@ -1,7 +1,7 @@
 import type { Meeting } from '../data/types'
 import { formatDuration, formatEuro } from './money'
 import { headCount, meetingCost, personSeconds } from './stats'
-import { funText } from './fun'
+import { funMode, funText } from './fun'
 import { t } from '../texts'
 
 export const clock = (ms: number) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -118,25 +118,29 @@ function draw(ctx: CanvasRenderingContext2D, m: Meeting, number: number, company
     ctx.translate(right - 52, headTop + 28)
     ctx.rotate((-9 * Math.PI) / 180)
     ctx.fillStyle = STAMP
-    ctx.font = `700 15px ${MONO}`
     ctx.textAlign = 'center'
-    setSpacing(ctx, 1.5)
-    ctx.fillText(t.bon.stamp, 0, -3)
-    ctx.font = `700 12px ${MONO}`
-    setSpacing(ctx, 0.5)
-    ctx.fillText(clock(end), 0, 14)
+    if (m.manual) {
+      ctx.font = `700 12px ${MONO}`
+      setSpacing(ctx, 1)
+      ctx.fillText(t.bon.stampManual, 0, 4)
+    } else {
+      ctx.font = `700 15px ${MONO}`
+      setSpacing(ctx, 1.5)
+      ctx.fillText(t.bon.stamp, 0, -3)
+      ctx.font = `700 12px ${MONO}`
+      setSpacing(ctx, 0.5)
+      ctx.fillText(clock(end), 0, 14)
+    }
     setSpacing(ctx, 0)
     ctx.restore()
     ctx.fillStyle = INK
   }
   y += headH
 
-  rows.push(
-    [t.bon.date, new Date(m.startedAt).toLocaleDateString('de-DE')],
-    [t.bon.start, clock(m.startedAt)],
-    [t.bon.end, clock(end)],
-    [t.bon.duration, formatDuration(m.durationSec)],
-  )
+  rows.push([t.bon.date, new Date(m.startedAt).toLocaleDateString('de-DE')])
+  if (!m.manual || m.startSet) rows.push([t.bon.start, clock(m.startedAt)])
+  if (!m.manual) rows.push([t.bon.end, clock(end)])
+  rows.push([t.bon.duration, formatDuration(m.durationSec)])
   const row = ([a, b]: [string, string]) => {
     text(a, left, y, `14px ${MONO}`)
     text(b, right, y, `14px ${MONO}`, 'right')
@@ -157,7 +161,7 @@ function draw(ctx: CanvasRenderingContext2D, m: Meeting, number: number, company
   text(t.bon.sum, left, y, `14px ${MONO}`)
   text(formatEuro(meetingCost(m)), right, y, `700 32px ${NUM}`, 'right', 1, -1)
   y += 20
-  const fun = funText(meetingCost(m))
+  const fun = funMode() ? funText(meetingCost(m)) : ''
   if (fun) {
     y += 6
     text(t.bon.fun(fun), MARGIN + W / 2, y, `700 13px ${MONO}`, 'center', 0.85)

@@ -37,6 +37,15 @@ export function storedChoice(): string {
   }
 }
 
+/** Steht der Schalter auf Spaß? Nur dann kommt der Spruch in den Bon. */
+export function funMode(): boolean {
+  try {
+    return localStorage.getItem('meetingtracker.metric') === 'fun'
+  } catch {
+    return false
+  }
+}
+
 /** Kurzer Vergleich für den Bon, z. B. "31,8 Döner"; leer bei 0 €. */
 export function funText(cents: number): string {
   return cents > 0 ? formatUnits(cents, unitFor(storedChoice(), cents)) : ''

@@ -59,7 +59,11 @@ export function parseData(raw: unknown): AppData {
     })
     const group = parseGroup(m.group)
     const rating = parseRating(m.rating)
-    return { id: m.id, title: m.title, startedAt: m.startedAt, durationSec: m.durationSec, participants, ...(group && { group }), ...(rating && { rating }) }
+    return {
+      id: m.id, title: m.title, startedAt: m.startedAt, durationSec: m.durationSec, participants,
+      ...(group && { group }), ...(rating && { rating }),
+      ...(m.manual === true && { manual: true as const }), ...(m.manual === true && m.startSet === true && { startSet: true as const }),
+    }
   })
   let live: AppData['live'] = null
   if (isObj(raw.live) && isStr(raw.live.title) && isInt(raw.live.startedAt) && Array.isArray(raw.live.personIds)) {
@@ -156,7 +160,7 @@ export const actions = {
     set({ ...state, teams: state.teams.filter((x) => x.id !== id) })
   },
   /** Neue Teilnehmer bekommen den aktuellen Satz, schon vorhandene behalten ihren gespeicherten Satz. */
-  saveMeeting(m: { id?: string; title: string; startedAt: number; durationSec: number; personIds: string[]; group?: FlatGroup | null; rating?: Rating | null }) {
+  saveMeeting(m: { id?: string; title: string; startedAt: number; durationSec: number; personIds: string[]; group?: FlatGroup | null; rating?: Rating | null; manual?: boolean; startSet?: boolean }) {
     const old = m.id ? state.meetings.find((x) => x.id === m.id) : undefined
     const participants: Participant[] = m.personIds.flatMap((pid) => {
       const kept = old?.participants.find((p) => p.personId === pid)
@@ -172,6 +176,8 @@ export const actions = {
       participants,
       ...(m.group && m.group.count > 0 && { group: m.group }),
       ...(m.rating && { rating: m.rating }),
+      ...(m.manual && { manual: true as const }),
+      ...(m.manual && m.startSet && { startSet: true as const }),
     }
     set({ ...state, meetings: old ? state.meetings.map((x) => (x.id === old.id ? meeting : x)) : [...state.meetings, meeting] })
     return meeting

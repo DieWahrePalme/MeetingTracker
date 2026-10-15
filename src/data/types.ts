@@ -35,6 +35,8 @@ export interface Meeting {
   participants: Participant[]
   group?: FlatGroup
   rating?: Rating // optional: Daumen hoch / neutral / Daumen runter
+  manual?: true // nachgetragen (nicht live gestoppt)
+  startSet?: true // bei Nachgetragenem: der Beginn wurde selbst eingegeben
 }
 
 export interface LiveMeeting {

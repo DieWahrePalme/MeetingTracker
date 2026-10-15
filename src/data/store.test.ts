@@ -13,6 +13,13 @@ describe('Import (parseData)', () => {
     const d = parseData(base({}))
     expect(d.meetings[0].group).toBeUndefined()
   })
+  it('merkt sich Nachgetragen und selbst gesetzten Beginn; Beginn nur bei Nachgetragenem', () => {
+    expect(parseData(base({})).meetings[0].manual).toBeUndefined()
+    expect(parseData(base({ manual: true })).meetings[0]).toMatchObject({ manual: true })
+    expect(parseData(base({ manual: true })).meetings[0].startSet).toBeUndefined()
+    expect(parseData(base({ manual: true, startSet: true })).meetings[0]).toMatchObject({ manual: true, startSet: true })
+    expect(parseData(base({ startSet: true })).meetings[0].startSet).toBeUndefined()
+  })
   it('liest eine Pauschale', () => {
     const d = parseData(base({ group: { count: 8, rateCents: 3000 } }))
     expect(d.meetings[0].group).toEqual({ count: 8, rateCents: 3000 })
