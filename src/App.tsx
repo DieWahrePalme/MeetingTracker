@@ -22,7 +22,7 @@ export default function App() {
           ))}
         </nav>
       </header>
-      <main className={tab === 'meetings' ? '' : 'narrow'}>{tab === 'meetings' ? <Meetings /> : tab === 'people' ? <People /> : <Data />}</main>
+      <main className={tab === 'meetings' ? '' : tab === 'people' ? 'people' : 'narrow'}>{tab === 'meetings' ? <Meetings /> : tab === 'people' ? <People /> : <Data />}</main>
     </div>
   )
 }

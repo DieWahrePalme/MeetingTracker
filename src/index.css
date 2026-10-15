@@ -408,6 +408,11 @@ select:disabled { opacity: 0.5; }
 /* ===== Meetings: eine Spalte am Handy, zwei Spalten am großen Bildschirm ===== */
 .cols, .col-side, .col-main { display: flex; flex-direction: column; gap: 20px; }
 
+/* ===== Personen: am Handy ein Bereich nach Wahl, am PC alle drei nebeneinander ===== */
+.people-cols, .pcol { display: flex; flex-direction: column; gap: 20px; }
+.pcol.off, .input.off, p.off { display: none; }
+.col-title { display: none; margin: 0; font-size: 1rem; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--edge); }
+
 /* ===== Große Bildschirme: Fenster als zentrierter Dialog ===== */
 @media (min-width: 700px) {
   .overlay { align-items: center; padding: 32px; }
@@ -417,6 +422,11 @@ select:disabled { opacity: 0.5; }
 }
 @media (min-width: 1000px) {
   .app { max-width: 1120px; }
+  .people-switch { display: none; }
+  .pcol.off { display: flex; }
+  .input.off, p.off { display: block; }
+  .people-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; align-items: start; }
+  .col-title { display: block; }
   main.narrow { width: 100%; max-width: 640px; margin: 0 auto; }
   .cols { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
   .col-side { order: 2; position: sticky; top: 16px; }

@@ -262,7 +262,7 @@ export function People() {
 
   return (
     <>
-      <div className="segment full" role="group">
+      <div className="segment full people-switch" role="group">
         {(['list', 'teams', 'score'] as const).map((k) => (
           <button key={k} className={view === k ? 'on' : ''} aria-pressed={view === k} onClick={() => setView(k)}>
             {k === 'list' ? t.people.viewList : k === 'teams' ? t.people.viewTeams : t.people.viewScore}
@@ -270,10 +270,10 @@ export function People() {
         ))}
       </div>
 
-      {view !== 'teams' && (data.people.length > 6 || query) && (
+      {(data.people.length > 6 || query) && (
         <input
           type="search"
-          className="input"
+          className={'input' + (view === 'teams' ? ' off' : '')}
           value={query}
           placeholder={t.people.search}
           aria-label={t.people.search}
@@ -281,15 +281,12 @@ export function People() {
           onChange={(e) => setQuery(e.target.value)}
         />
       )}
-      {view === 'teams' && (
-        <button className="btn primary wide" onClick={() => setEditingTeam('new')} disabled={activeTotal === 0}>{t.people.team.add}</button>
-      )}
-      {view === 'list' && (
-        <button className="btn primary wide" onClick={() => setEditing('new')}>{t.people.add}</button>
-      )}
-      {view !== 'teams' && query && <p className="muted">{t.people.shown(view === 'list' ? found.length : scores.length, view === 'list' ? data.people.length : allScores.length)}</p>}
+      {query && <p className={'muted' + (view === 'teams' ? ' off' : '')}>{view === 'score' ? t.people.shown(scores.length, allScores.length) : t.people.shown(found.length, data.people.length)}</p>}
 
-      {view === 'list' && (
+      <div className="people-cols">
+      <div className={'pcol' + (view === 'list' ? '' : ' off')}>
+        <h2 className="col-title">{t.people.viewList}</h2>
+        <button className="btn primary wide" onClick={() => setEditing('new')}>{t.people.add}</button>
         <>
           {data.people.length === 0 ? (
             <p className="muted empty">{t.people.empty}</p>
@@ -307,10 +304,12 @@ export function People() {
             </>
           )}
         </>
-      )}
+      </div>
 
-      {view === 'teams' &&
-        (data.teams.length === 0 ? (
+      <div className={'pcol' + (view === 'teams' ? '' : ' off')}>
+        <h2 className="col-title">{t.people.viewTeams}</h2>
+        <button className="btn primary wide" onClick={() => setEditingTeam('new')} disabled={activeTotal === 0}>{t.people.team.add}</button>
+        {(data.teams.length === 0 ? (
           <p className="muted empty">{t.people.team.empty}</p>
         ) : (
           <ul className="plain list">
@@ -324,8 +323,10 @@ export function People() {
             ))}
           </ul>
         ))}
+      </div>
 
-      {view === 'score' && (
+      <div className={'pcol' + (view === 'score' ? '' : ' off')}>
+        <h2 className="col-title">{t.people.viewScore}</h2>
         <section>
           <p className="muted">{t.people.rank}</p>
           {scores.length === 0 ? (
@@ -358,7 +359,8 @@ export function People() {
             </button>
           )}
         </section>
-      )}
+      </div>
+      </div>
 
       {editing && <PersonForm person={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
       {editingTeam && <TeamForm team={editingTeam === 'new' ? undefined : editingTeam} onClose={() => setEditingTeam(null)} />}
