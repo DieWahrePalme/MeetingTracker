@@ -160,3 +160,12 @@ export/import data, runs smoothly on a phone, money maths covered by tests.
 Should the total be filterable by month? What happens to old meetings when a
 person's rate changes (suggest: meetings keep the rate they had when saved)?
 Name and domain for later.
+
+## Bon exportieren (2026-10-15)
+- Im Bon-Fenster (nach dem Stoppen und aus dem Meeting-Detail über das Teilen-Symbol): großer Knopf **Teilen** (Teilen-Menü des Geräts, am PC Download). Das Drucker-Symbol im Detail öffnet den Bon.
+- Das Bild (PNG) wird im Browser selbst gezeichnet (Canvas), nichts verlässt das Gerät. Bon-Nr. = Platz in der zeitlichen Reihenfolge.
+
+## Spaß-Modus (2026-10-15)
+- Dritte Stellung im Schalter neben Kosten und Zeit (Smiley, Farbe Pink). Rechnet Kosten in Spaß-Einheiten um: Kaffee 3,50 €, Döner 8,50 €, Pizza 11 €, Hochregal 1.200 €, Maybach 300.000 € (Inside-Joke, Preise in `src/lib/fun.ts`).
+- Standard ist "Automatisch" (größte passende Einheit, unter einem Döner Kaffee). Andere Einheit: langer Druck oder Tipp auf den aktiven Smiley öffnet ein Menü. Die Wahl bleibt im Browser.
+- Der Bon zeigt unter der Summe "Das sind X Döner."
