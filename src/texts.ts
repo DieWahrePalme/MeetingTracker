@@ -122,6 +122,7 @@ export const t = {
     more: 'Pauschale und Bewertung',
     moreGroup: (n: number) => `${n} Pauschale`,
     date: 'Datum',
+    time: 'Beginn',
     duration: 'Dauer',
     h: 'Std',
     m: 'Min',

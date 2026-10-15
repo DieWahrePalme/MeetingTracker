@@ -313,8 +313,8 @@ select:disabled { opacity: 0.5; }
 .form-row > span { color: var(--muted); font-size: 0.95rem; flex: none; }
 .form-row .bare { background: transparent; border-radius: 0; min-height: 52px; padding: 0; flex: 1; min-width: 0; width: auto; }
 .form-row .bare.right { text-align: right; }
-.form-row input[type='date'] { -webkit-appearance: none; appearance: none; color: var(--text); }
-.form-row input[type='date']::-webkit-date-and-time-value { text-align: right; min-height: 1.4em; }
+.form-row input[type='date'], .form-row input[type='time'] { -webkit-appearance: none; appearance: none; color: var(--text); }
+.form-row input[type='date']::-webkit-date-and-time-value, .form-row input[type='time']::-webkit-date-and-time-value { text-align: right; min-height: 1.4em; }
 .dur-inline { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .dur-inline label { display: flex; align-items: baseline; gap: 4px; }
 .dur-inline input { width: 3.1rem; min-height: 40px; padding: 0 4px; text-align: center; border-radius: 10px; }

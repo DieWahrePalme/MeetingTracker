@@ -13,14 +13,20 @@ const toDateStr = (ms: number) => {
   const d = new Date(ms)
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+const toTimeStr = (ms: number) => {
+  const d = new Date(ms)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 
 /** `meeting` = bearbeiten, `copyFrom` = als Vorlage für ein neues Meeting (Duplizieren). */
 export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: { meeting?: Meeting; copyFrom?: Meeting; startDate?: number; heading?: string; onClose: () => void }) {
   const { people, teams, meetings } = useData()
   const src = meeting ?? copyFrom
   const initialDate = toDateStr(meeting?.startedAt ?? Date.now())
+  const initialTime = toTimeStr(meeting?.startedAt ?? Date.now())
   const [title, setTitle] = useState(src?.title ?? '')
   const [date, setDate] = useState(toDateStr(startDate ?? meeting?.startedAt ?? Date.now()))
+  const [time, setTime] = useState(toTimeStr(src?.startedAt ?? Date.now()))
   const dur = src?.durationSec ?? 1800
   const [h, setH] = useState(String(Math.floor(dur / 3600)))
   const [m, setM] = useState(String(Math.floor((dur % 3600) / 60)))
@@ -44,9 +50,11 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
   function save() {
     if (error) return setTried(true)
     let startedAt = meeting?.startedAt ?? Date.now()
-    if (date !== initialDate || !meeting) {
+    // Unverändert lassen (samt Sekunden), wenn weder Tag noch Uhrzeit angefasst wurden
+    if (date !== initialDate || time !== initialTime || !meeting) {
       const [y, mo, d] = date.split('-').map(Number)
-      startedAt = new Date(y, mo - 1, d, 12).getTime()
+      const [hh, mi] = (time || '12:00').split(':').map(Number)
+      startedAt = new Date(y, mo - 1, d, hh, mi).getTime()
     }
     actions.saveMeeting({ id: meeting?.id, title: title.trim() || 'Meeting', startedAt, durationSec, personIds: ids, group: flat, rating })
     onClose()
@@ -64,6 +72,10 @@ export function MeetingForm({ meeting, copyFrom, startDate, heading, onClose }: 
         <label className="form-row">
           <span>{t.form.date}</span>
           <input className="bare right" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <label className="form-row">
+          <span>{t.form.time}</span>
+          <input className="bare right" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
         <div className="form-row" role="group" aria-label={t.form.duration}>
           <span>{t.form.duration}</span>
