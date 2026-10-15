@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useData } from '../data/store'
 import { suggestRecurring } from '../lib/recurring'
 import type { Suggestion } from '../lib/recurring'
@@ -70,6 +70,30 @@ export function Meetings() {
   const [metric, setMetric] = useMetric()
   const [unitId, setUnitId] = useFunUnit()
   const key = metric + unitId
+  const [menuOpen, setMenuOpen] = useState(false)
+  // Langer Druck auf den Smiley öffnet das Einheiten-Menü; der Klick, der danach noch folgt, wird übergangen.
+  const press = useRef<{ timer: number; long: boolean }>({ timer: 0, long: false })
+  const startPress = () => {
+    press.current.long = false
+    window.clearTimeout(press.current.timer)
+    press.current.timer = window.setTimeout(() => {
+      press.current.long = true
+      setMetric('fun')
+      setMenuOpen(true)
+    }, 450)
+  }
+  const endPress = () => window.clearTimeout(press.current.timer)
+  const onMetricClick = (k: Metric) => {
+    if (press.current.long) {
+      press.current.long = false
+      return
+    }
+    if (k === 'fun' && metric === 'fun') setMenuOpen(!menuOpen)
+    else {
+      setMenuOpen(false)
+      setMetric(k)
+    }
+  }
   const [filter, setFilter] = useState<Filter>(noFilter)
   const [sort, setSort] = useState<'newest' | 'value'>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>(null)
@@ -112,7 +136,10 @@ export function Meetings() {
           <div className="metric-switch" data-m={metric} role="radiogroup" aria-label={t.metric.label}>
             <span className="thumb" aria-hidden="true" />
             {METRICS.map((k) => (
-              <button key={k} className={'opt ' + k} role="radio" aria-checked={metric === k} aria-label={t.metric[k]} onClick={() => setMetric(k)}>
+              <button key={k} className={'opt ' + k} role="radio" aria-checked={metric === k} aria-label={t.metric[k]}
+                onClick={() => onMetricClick(k)}
+                {...(k === 'fun' ? { onPointerDown: startPress, onPointerUp: endPress, onPointerLeave: endPress, onPointerCancel: endPress, onContextMenu: (e: React.MouseEvent) => e.preventDefault(), 'aria-haspopup': 'menu' as const, 'aria-expanded': menuOpen } : {})}
+              >
                 {k === 'cost' ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M17.5 6.6A7 7 0 1 0 17.5 17.4M5 10h9M5 14h9" />
@@ -131,6 +158,27 @@ export function Meetings() {
               </button>
             ))}
           </div>
+          {menuOpen && (
+            <>
+              <div className="menu-backdrop" onClick={() => setMenuOpen(false)} />
+              <div className="fun-menu" role="menu" aria-label={t.fun.unit}>
+                {[{ id: AUTO, one: t.fun.auto }, ...FUN_UNITS].map((u) => (
+                  <button
+                    key={u.id}
+                    role="menuitemradio"
+                    aria-checked={u.id === unitId}
+                    onClick={() => {
+                      setUnitId(u.id)
+                      setMenuOpen(false)
+                    }}
+                  >
+                    <span>{u.one}</span>
+                    {u.id === unitId && <span aria-hidden="true">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <p className="total" style={{ fontSize: `calc(clamp(2.5rem, 13vw, 3.8rem) * ${Math.min(1, 10 / heroText.length)})` }}>
           <CountUp value={heroValue} format={fmtFor(heroValue)} resetKey={key} />
@@ -142,15 +190,6 @@ export function Meetings() {
               ? t.totalSubTime(meetings.length)
               : `${t.fun.also} ${FUN_UNITS.filter((u) => u.id !== heroUnit.id).map((u) => formatUnits(heroValue, u)).join(' · ')}`}
         </p>
-        {metric === 'fun' && (
-          <div className="chips unit-chips" role="radiogroup" aria-label={t.fun.unit}>
-            {[{ id: AUTO, one: t.fun.auto }, ...FUN_UNITS].map((u) => (
-              <button key={u.id} className={'chip' + (u.id === unitId ? ' on' : '')} role="radio" aria-checked={u.id === unitId} onClick={() => setUnitId(u.id)}>
-                {u.one}
-              </button>
-            ))}
-          </div>
-        )}
       </section>
 
       <Suggestions items={suggestions} onCreate={setSuggested} />
