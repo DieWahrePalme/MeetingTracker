@@ -2,6 +2,8 @@
 export const t = {
   appName: 'ichhassemeetings',
   tabs: { meetings: 'Meetings', people: 'Personen', data: 'Daten' },
+  // Zentrales Impressum aller Seiten von Moritz, liegt auf sitstudio.de
+  imprint: { label: 'Impressum', url: 'https://www.sitstudio.de/impressum/' },
   pick: {
     search: 'Person suchen …',
     selected: (n: number) => `${n} ausgewählt`,

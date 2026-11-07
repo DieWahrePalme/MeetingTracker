@@ -23,6 +23,9 @@ export default function App() {
         </nav>
       </header>
       <main className={tab === 'meetings' ? '' : tab === 'people' ? 'people' : 'narrow'}>{tab === 'meetings' ? <Meetings /> : tab === 'people' ? <People /> : <Data />}</main>
+      <footer className="legal">
+        <a href={t.imprint.url}>{t.imprint.label}</a>
+      </footer>
     </div>
   )
 }
