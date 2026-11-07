@@ -78,6 +78,8 @@ header { padding: 8px 0 4px; margin-bottom: 8px; }
 .brand { padding: 0 4px; }
 .brand { display: block; font-weight: 600; font-size: 0.9rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 main { display: flex; flex-direction: column; gap: 20px; }
+.legal { margin-top: 32px; text-align: center; font-size: 0.85rem; }
+.legal a { display: inline-block; padding: 12px 8px; color: var(--muted); }
 
 h2 { font-size: 1.2rem; line-height: 1.25; margin: 0; letter-spacing: -0.01em; }
 h3 { font-size: 0.8rem; margin: 8px 4px 0; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
